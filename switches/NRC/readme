@@ -1,0 +1,14 @@
+Rewrite of NRC class in misc/NRC.
+make MODE=debug
+
+Actually there is a bug in NRC.cc:
+In the port_allocation function, I commented out the checking for credits. In
+the second_virtual_channel_allocation, the credits will be no less than the
+PacketLength, but because the second_virtual_channel_allocation is executed
+at packet-wise, the ensurement maybe outdated during the packet transmission.
+I has not figured out a scheme to solve the bug, so I just commented out the
+checking line. It won't cause program crashed because the implementation of
+input buffer is deque with variant length.
+
+The bug is not introduced during the re-writing code. The bug is existed all
+the time since last December.

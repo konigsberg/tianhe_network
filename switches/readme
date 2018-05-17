@@ -1,0 +1,23 @@
+Tianhe-2 interconnect network is composed of computing nodes and switches.
+
+This folder contains the OMNeT++ models of switches.
+
+NRC is the basic electronic switch. Each port of NRC is not connected to
+optical switch.
+
+LowerNRC locates below the optical switch. LowerNRC is the second layer of
+switch of NRM in cabinet.
+
+UpperNRC locates above the optical switch. UpperNRC is the first later of
+switch of NRM in root.
+
+OpticalSwitch is the optical switch based on micro-ring resonators, and it
+locates between LowerNRC and UpperNRC, say, the third layer switch in the
+fat-tree topology.
+
+BaseNRC is the improved NRC in electrical-optical hybrid network. It locates
+at the first and fifth layer in the fat-tree topology.
+
+LowerNRC, UpperNRC and BaseNRC implement the flow-control protocols in
+electrical-optical hybrid network. NRC use the traditional credit based
+flow-control protocols.
