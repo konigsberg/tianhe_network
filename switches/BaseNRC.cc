@@ -6,8 +6,6 @@
 
 using buf = std::deque<flit *>;
 
-constexpr static log_levels log_lvl = log_levels::debug;
-
 BaseNRC::BaseNRC() {}
 
 BaseNRC::~BaseNRC() {
@@ -167,7 +165,7 @@ void BaseNRC::route_compute() {
                                                                                \
     auto cdt = new credit();                                                   \
     cdt->setOs(-1);                                                            \
-    cdt->setPort(pi);                                                          \
+    cdt->setPort(get_next_port(pi));                                           \
     cdt->setVc(vi);                                                            \
     credit_queue_[pi].push_back(cdt);                                          \
   }
@@ -356,6 +354,8 @@ void BaseNRC::forward_flit() {
     if (credit_[po][vi] == 0)
       continue;
 
+    --credit_[po][vi];
+
     auto next_pi = get_next_port(po);
     f->setPort(next_pi);
 
@@ -389,7 +389,11 @@ void BaseNRC::flit_cb(omnetpp::cMessage *msg) {
   flit *f = omnetpp::check_and_cast<flit *>(msg);
   auto p = f->getPort();
   auto v = f->getVcid();
+  if (inbuf_[p][v].size() > inbuf_capacity)
+    std::cerr << get_log(log_levels::critical,
+                         "router " + get_id() + " input buffer overflow");
   assert(inbuf_[p][v].size() <= inbuf_capacity);
+
   inbuf_[p][v].push_back(f);
   std::cerr << get_log(log_levels::info,
                        std::string("received flit: ") + f->getName());

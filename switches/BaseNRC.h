@@ -6,7 +6,8 @@
 
 #include "../th2/credit_m.h"
 #include "../th2/flit_m.h"
-#include "../th2/macros.h"
+#include "../th2/globals.h"
+#include "../th2/sim.h"
 
 class BaseNRC : public omnetpp::cSimpleModule {
 public:
