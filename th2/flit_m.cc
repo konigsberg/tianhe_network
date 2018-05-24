@@ -181,12 +181,14 @@ Register_Class(flit)
 
 flit::flit(const char *name, short kind) : ::omnetpp::cPacket(name,kind)
 {
+    this->hop_count = 0;
     this->src_id = 0;
     this->dest_id = 0;
     this->is_head = false;
     this->is_tail = false;
     this->vcid = 0;
     this->port = 0;
+    this->next_port = 0;
     this->send_time = 0;
     this->credit_os = 0;
     this->credit_port = 0;
@@ -212,12 +214,14 @@ flit& flit::operator=(const flit& other)
 
 void flit::copy(const flit& other)
 {
+    this->hop_count = other.hop_count;
     this->src_id = other.src_id;
     this->dest_id = other.dest_id;
     this->is_head = other.is_head;
     this->is_tail = other.is_tail;
     this->vcid = other.vcid;
     this->port = other.port;
+    this->next_port = other.next_port;
     this->send_time = other.send_time;
     this->credit_os = other.credit_os;
     this->credit_port = other.credit_port;
@@ -227,12 +231,14 @@ void flit::copy(const flit& other)
 void flit::parsimPack(omnetpp::cCommBuffer *b) const
 {
     ::omnetpp::cPacket::parsimPack(b);
+    doParsimPacking(b,this->hop_count);
     doParsimPacking(b,this->src_id);
     doParsimPacking(b,this->dest_id);
     doParsimPacking(b,this->is_head);
     doParsimPacking(b,this->is_tail);
     doParsimPacking(b,this->vcid);
     doParsimPacking(b,this->port);
+    doParsimPacking(b,this->next_port);
     doParsimPacking(b,this->send_time);
     doParsimPacking(b,this->credit_os);
     doParsimPacking(b,this->credit_port);
@@ -242,16 +248,28 @@ void flit::parsimPack(omnetpp::cCommBuffer *b) const
 void flit::parsimUnpack(omnetpp::cCommBuffer *b)
 {
     ::omnetpp::cPacket::parsimUnpack(b);
+    doParsimUnpacking(b,this->hop_count);
     doParsimUnpacking(b,this->src_id);
     doParsimUnpacking(b,this->dest_id);
     doParsimUnpacking(b,this->is_head);
     doParsimUnpacking(b,this->is_tail);
     doParsimUnpacking(b,this->vcid);
     doParsimUnpacking(b,this->port);
+    doParsimUnpacking(b,this->next_port);
     doParsimUnpacking(b,this->send_time);
     doParsimUnpacking(b,this->credit_os);
     doParsimUnpacking(b,this->credit_port);
     doParsimUnpacking(b,this->credit_vc);
+}
+
+int flit::getHop_count() const
+{
+    return this->hop_count;
+}
+
+void flit::setHop_count(int hop_count)
+{
+    this->hop_count = hop_count;
 }
 
 int flit::getSrc_id() const
@@ -312,6 +330,16 @@ int flit::getPort() const
 void flit::setPort(int port)
 {
     this->port = port;
+}
+
+int flit::getNext_port() const
+{
+    return this->next_port;
+}
+
+void flit::setNext_port(int next_port)
+{
+    this->next_port = next_port;
 }
 
 double flit::getSend_time() const
@@ -419,7 +447,7 @@ const char *flitDescriptor::getProperty(const char *propertyname) const
 int flitDescriptor::getFieldCount() const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
-    return basedesc ? 10+basedesc->getFieldCount() : 10;
+    return basedesc ? 12+basedesc->getFieldCount() : 12;
 }
 
 unsigned int flitDescriptor::getFieldTypeFlags(int field) const
@@ -441,8 +469,10 @@ unsigned int flitDescriptor::getFieldTypeFlags(int field) const
         FD_ISEDITABLE,
         FD_ISEDITABLE,
         FD_ISEDITABLE,
+        FD_ISEDITABLE,
+        FD_ISEDITABLE,
     };
-    return (field>=0 && field<10) ? fieldTypeFlags[field] : 0;
+    return (field>=0 && field<12) ? fieldTypeFlags[field] : 0;
 }
 
 const char *flitDescriptor::getFieldName(int field) const
@@ -454,34 +484,38 @@ const char *flitDescriptor::getFieldName(int field) const
         field -= basedesc->getFieldCount();
     }
     static const char *fieldNames[] = {
+        "hop_count",
         "src_id",
         "dest_id",
         "is_head",
         "is_tail",
         "vcid",
         "port",
+        "next_port",
         "send_time",
         "credit_os",
         "credit_port",
         "credit_vc",
     };
-    return (field>=0 && field<10) ? fieldNames[field] : nullptr;
+    return (field>=0 && field<12) ? fieldNames[field] : nullptr;
 }
 
 int flitDescriptor::findField(const char *fieldName) const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
     int base = basedesc ? basedesc->getFieldCount() : 0;
-    if (fieldName[0]=='s' && strcmp(fieldName, "src_id")==0) return base+0;
-    if (fieldName[0]=='d' && strcmp(fieldName, "dest_id")==0) return base+1;
-    if (fieldName[0]=='i' && strcmp(fieldName, "is_head")==0) return base+2;
-    if (fieldName[0]=='i' && strcmp(fieldName, "is_tail")==0) return base+3;
-    if (fieldName[0]=='v' && strcmp(fieldName, "vcid")==0) return base+4;
-    if (fieldName[0]=='p' && strcmp(fieldName, "port")==0) return base+5;
-    if (fieldName[0]=='s' && strcmp(fieldName, "send_time")==0) return base+6;
-    if (fieldName[0]=='c' && strcmp(fieldName, "credit_os")==0) return base+7;
-    if (fieldName[0]=='c' && strcmp(fieldName, "credit_port")==0) return base+8;
-    if (fieldName[0]=='c' && strcmp(fieldName, "credit_vc")==0) return base+9;
+    if (fieldName[0]=='h' && strcmp(fieldName, "hop_count")==0) return base+0;
+    if (fieldName[0]=='s' && strcmp(fieldName, "src_id")==0) return base+1;
+    if (fieldName[0]=='d' && strcmp(fieldName, "dest_id")==0) return base+2;
+    if (fieldName[0]=='i' && strcmp(fieldName, "is_head")==0) return base+3;
+    if (fieldName[0]=='i' && strcmp(fieldName, "is_tail")==0) return base+4;
+    if (fieldName[0]=='v' && strcmp(fieldName, "vcid")==0) return base+5;
+    if (fieldName[0]=='p' && strcmp(fieldName, "port")==0) return base+6;
+    if (fieldName[0]=='n' && strcmp(fieldName, "next_port")==0) return base+7;
+    if (fieldName[0]=='s' && strcmp(fieldName, "send_time")==0) return base+8;
+    if (fieldName[0]=='c' && strcmp(fieldName, "credit_os")==0) return base+9;
+    if (fieldName[0]=='c' && strcmp(fieldName, "credit_port")==0) return base+10;
+    if (fieldName[0]=='c' && strcmp(fieldName, "credit_vc")==0) return base+11;
     return basedesc ? basedesc->findField(fieldName) : -1;
 }
 
@@ -496,8 +530,10 @@ const char *flitDescriptor::getFieldTypeString(int field) const
     static const char *fieldTypeStrings[] = {
         "int",
         "int",
+        "int",
         "bool",
         "bool",
+        "int",
         "int",
         "int",
         "double",
@@ -505,7 +541,7 @@ const char *flitDescriptor::getFieldTypeString(int field) const
         "int",
         "int",
     };
-    return (field>=0 && field<10) ? fieldTypeStrings[field] : nullptr;
+    return (field>=0 && field<12) ? fieldTypeStrings[field] : nullptr;
 }
 
 const char **flitDescriptor::getFieldPropertyNames(int field) const
@@ -572,16 +608,18 @@ std::string flitDescriptor::getFieldValueAsString(void *object, int field, int i
     }
     flit *pp = (flit *)object; (void)pp;
     switch (field) {
-        case 0: return long2string(pp->getSrc_id());
-        case 1: return long2string(pp->getDest_id());
-        case 2: return bool2string(pp->getIs_head());
-        case 3: return bool2string(pp->getIs_tail());
-        case 4: return long2string(pp->getVcid());
-        case 5: return long2string(pp->getPort());
-        case 6: return double2string(pp->getSend_time());
-        case 7: return long2string(pp->getCredit_os());
-        case 8: return long2string(pp->getCredit_port());
-        case 9: return long2string(pp->getCredit_vc());
+        case 0: return long2string(pp->getHop_count());
+        case 1: return long2string(pp->getSrc_id());
+        case 2: return long2string(pp->getDest_id());
+        case 3: return bool2string(pp->getIs_head());
+        case 4: return bool2string(pp->getIs_tail());
+        case 5: return long2string(pp->getVcid());
+        case 6: return long2string(pp->getPort());
+        case 7: return long2string(pp->getNext_port());
+        case 8: return double2string(pp->getSend_time());
+        case 9: return long2string(pp->getCredit_os());
+        case 10: return long2string(pp->getCredit_port());
+        case 11: return long2string(pp->getCredit_vc());
         default: return "";
     }
 }
@@ -596,16 +634,18 @@ bool flitDescriptor::setFieldValueAsString(void *object, int field, int i, const
     }
     flit *pp = (flit *)object; (void)pp;
     switch (field) {
-        case 0: pp->setSrc_id(string2long(value)); return true;
-        case 1: pp->setDest_id(string2long(value)); return true;
-        case 2: pp->setIs_head(string2bool(value)); return true;
-        case 3: pp->setIs_tail(string2bool(value)); return true;
-        case 4: pp->setVcid(string2long(value)); return true;
-        case 5: pp->setPort(string2long(value)); return true;
-        case 6: pp->setSend_time(string2double(value)); return true;
-        case 7: pp->setCredit_os(string2long(value)); return true;
-        case 8: pp->setCredit_port(string2long(value)); return true;
-        case 9: pp->setCredit_vc(string2long(value)); return true;
+        case 0: pp->setHop_count(string2long(value)); return true;
+        case 1: pp->setSrc_id(string2long(value)); return true;
+        case 2: pp->setDest_id(string2long(value)); return true;
+        case 3: pp->setIs_head(string2bool(value)); return true;
+        case 4: pp->setIs_tail(string2bool(value)); return true;
+        case 5: pp->setVcid(string2long(value)); return true;
+        case 6: pp->setPort(string2long(value)); return true;
+        case 7: pp->setNext_port(string2long(value)); return true;
+        case 8: pp->setSend_time(string2double(value)); return true;
+        case 9: pp->setCredit_os(string2long(value)); return true;
+        case 10: pp->setCredit_port(string2long(value)); return true;
+        case 11: pp->setCredit_vc(string2long(value)); return true;
         default: return false;
     }
 }

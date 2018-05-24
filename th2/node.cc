@@ -148,6 +148,7 @@ flit *Node::flit_factory(bool is_head, bool is_tail, int32_t vcid,
   f->setVcid(vcid);
   f->setPort(get_next_port());
   f->setCredit_vc(-1);
+  f->setHop_count(0);
   return f;
 }
 
@@ -194,7 +195,7 @@ inline std::string Node::get_id() {
 std::string Node::get_log(log_levels level, const std::string &msg) {
   if (log_lvl < level)
     return "";
-  std::string lvl_type[4] = {"ERROR", "WARNING", "INFO", "DEBUG"};
+  std::string lvl_type[4] = {"CRI", "WARN", "INFO", "DBG"};
   std::string log_msg = lvl_type[int(log_lvl)] + "|at " +
                         std::to_string(omnetpp::simTime().dbl() * 1e9) +
                         "ns in " + get_id() + ", ";

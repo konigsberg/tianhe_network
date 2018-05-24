@@ -186,10 +186,10 @@ module NRM
         nrc[2].port_6 <--> port_30;
         nrc[2].port_7 <--> port_31;
 
-		nrc[2].port_8 <--> port_68;
-		nrc[2].port_9 <--> port_69;
-		nrc[2].port_10 <--> port_70;
-		nrc[2].port_11 <--> port_71;
+				nrc[2].port_8 <--> port_32;
+				nrc[2].port_9 <--> port_33;
+				nrc[2].port_10 <--> port_34;
+				nrc[2].port_11 <--> port_35;
 
         nrc[2].port_12 <--> C <--> nrc[3].port_8;
         nrc[2].port_13 <--> C <--> nrc[3].port_9;
@@ -204,44 +204,44 @@ module NRM
         nrc[2].port_22 <--> C <--> nrc[5].port_10;
         nrc[2].port_23 <--> C <--> nrc[5].port_11;
 
-        nrc[3].port_12 <--> port_32;
-        nrc[3].port_13 <--> port_33;
-        nrc[3].port_14 <--> port_34;
-        nrc[3].port_15 <--> port_35;
-        nrc[3].port_16 <--> port_36;
-        nrc[3].port_17 <--> port_37;
-        nrc[3].port_18 <--> port_38;
-        nrc[3].port_19 <--> port_39;
-        nrc[3].port_20 <--> port_40;
-        nrc[3].port_21 <--> port_41;
-        nrc[3].port_22 <--> port_42;
-        nrc[3].port_23 <--> port_43;
+        nrc[3].port_12 <--> port_36;
+        nrc[3].port_13 <--> port_37;
+        nrc[3].port_14 <--> port_38;
+        nrc[3].port_15 <--> port_39;
+        nrc[3].port_16 <--> port_40;
+        nrc[3].port_17 <--> port_41;
+        nrc[3].port_18 <--> port_42;
+        nrc[3].port_19 <--> port_43;
+        nrc[3].port_20 <--> port_44;
+        nrc[3].port_21 <--> port_45;
+        nrc[3].port_22 <--> port_46;
+        nrc[3].port_23 <--> port_47;
 
-        nrc[4].port_12 <--> port_44;
-        nrc[4].port_13 <--> port_45;
-        nrc[4].port_14 <--> port_46;
-        nrc[4].port_15 <--> port_47;
-        nrc[4].port_16 <--> port_48;
-        nrc[4].port_17 <--> port_49;
-        nrc[4].port_18 <--> port_50;
-        nrc[4].port_19 <--> port_51;
-        nrc[4].port_20 <--> port_52;
-        nrc[4].port_21 <--> port_53;
-        nrc[4].port_22 <--> port_54;
-        nrc[4].port_23 <--> port_55;
+        nrc[4].port_12 <--> port_48;
+        nrc[4].port_13 <--> port_49;
+        nrc[4].port_14 <--> port_50;
+        nrc[4].port_15 <--> port_51;
+        nrc[4].port_16 <--> port_52;
+        nrc[4].port_17 <--> port_53;
+        nrc[4].port_18 <--> port_54;
+        nrc[4].port_19 <--> port_55;
+        nrc[4].port_20 <--> port_56;
+        nrc[4].port_21 <--> port_57;
+        nrc[4].port_22 <--> port_58;
+        nrc[4].port_23 <--> port_59;
 
-        nrc[5].port_12 <--> port_56;
-        nrc[5].port_13 <--> port_57;
-        nrc[5].port_14 <--> port_58;
-        nrc[5].port_15 <--> port_59;
-        nrc[5].port_16 <--> port_60;
-        nrc[5].port_17 <--> port_61;
-        nrc[5].port_18 <--> port_62;
-        nrc[5].port_19 <--> port_63;
-        nrc[5].port_20 <--> port_64;
-        nrc[5].port_21 <--> port_65;
-        nrc[5].port_22 <--> port_66;
-        nrc[5].port_23 <--> port_67;
+        nrc[5].port_12 <--> port_60;
+        nrc[5].port_13 <--> port_61;
+        nrc[5].port_14 <--> port_62;
+        nrc[5].port_15 <--> port_63;
+        nrc[5].port_16 <--> port_64;
+        nrc[5].port_17 <--> port_65;
+        nrc[5].port_18 <--> port_66;
+        nrc[5].port_19 <--> port_67;
+        nrc[5].port_20 <--> port_68;
+        nrc[5].port_21 <--> port_69;
+        nrc[5].port_22 <--> port_70;
+        nrc[5].port_23 <--> port_71;
 
 }
 

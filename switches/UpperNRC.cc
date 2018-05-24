@@ -2,13 +2,15 @@
 #include <cassert>
 #include <cstring>
 
-#include "BaseNRC.h"
+#include "UpperNRC.h"
 
 using buf = std::deque<flit *>;
 
-BaseNRC::BaseNRC() {}
+int32_t root_remote_credit_counter[36][48][12][V];
 
-BaseNRC::~BaseNRC() {
+UpperNRC::UpperNRC() {}
+
+UpperNRC::~UpperNRC() {
   cancelAndDelete(self_timer_);
 
   // clear inbuf
@@ -54,7 +56,7 @@ BaseNRC::~BaseNRC() {
   }
 }
 
-void BaseNRC::initialize() {
+void UpperNRC::initialize() {
   self_timer_ = new omnetpp::cMessage("self_timer");
   scheduleAt(sim_start_time, self_timer_);
 
@@ -85,9 +87,14 @@ void BaseNRC::initialize() {
             -1);
 
   std::fill(sa2_vcid_, sa2_vcid_ + sizeof(sa2_vcid_) / sizeof(int32_t), -1);
+
+  std::fill(root_remote_credit_counter[0][0][0],
+            root_remote_credit_counter[0][0][0] +
+                sizeof(root_remote_credit_counter) / sizeof(int32_t),
+            inbuf_capacity);
 }
 
-void BaseNRC::handleMessage(omnetpp::cMessage *msg) {
+void UpperNRC::handleMessage(omnetpp::cMessage *msg) {
   if (msg->isSelfMessage()) {
     timer_cb();
   } else {
@@ -95,27 +102,38 @@ void BaseNRC::handleMessage(omnetpp::cMessage *msg) {
   }
 }
 
-void BaseNRC::timer_cb() {
+void UpperNRC::timer_cb() {
   scheduleAt(omnetpp::simTime() + clk_cycle, self_timer_);
   route_compute();
   row_move();
   first_virtual_channel_allocation();
   switch_allocation();
   switch_traversal();
-  second_virtual_channel_allocation();
-  port_allocation();
-  forward_flit();
+  upper_port_second_virtual_channel_allocation();
+  upper_port_allocation();
+  upper_port_forward_flit();
+  lower_port_select_packet();
 }
 
 #define ROUTE_COMPUTE_FOR_FLIT(pi, vi)                                         \
   {                                                                            \
     if (inbuf_[pi][vi].empty())                                                \
       continue;                                                                \
+                                                                               \
     flit *f = inbuf_[pi][vi].front();                                          \
                                                                                \
     if (f->getIs_head() && routing_result_[pi][vi] == -1) {                    \
       auto po = get_routing_port(f);                                           \
-      auto vo = get_best_vcid(po);                                             \
+      auto vo = -1;                                                            \
+                                                                               \
+      if (po < P / 2) {                                                        \
+        auto next_po = get_next_routing_port(f);                               \
+        f->setNext_port(next_po);                                              \
+        next_routing_result_[pi] = next_po;                                    \
+        vo = rand() % (V / 2);                                                 \
+      } else                                                                   \
+        next_routing_result_[pi] = -1;                                         \
+                                                                               \
       std::cerr << get_log(log_levels::info,                                   \
                            std::string("flit: ") + f->getName() +              \
                                " routed to port " + std::to_string(po));       \
@@ -127,10 +145,11 @@ void BaseNRC::timer_cb() {
       auto vo = routing_result_[pi][vi] % V;                                   \
       f->setPort(po);                                                          \
       f->setVcid(vo);                                                          \
+      f->setNext_port(next_routing_result_[pi]);                               \
     }                                                                          \
   }
 
-void BaseNRC::route_compute() {
+void UpperNRC::route_compute() {
   for (auto pi = 0; pi < P; pi++) {
     for (auto vi = 0; vi < V; vi++) {
       ROUTE_COMPUTE_FOR_FLIT(pi, vi);
@@ -157,18 +176,25 @@ void BaseNRC::route_compute() {
                                                                                \
     if (f->getIs_tail()) {                                                     \
       routing_result_[pi][vi] = -1;                                            \
+      next_routing_result_[pi] = -1;                                           \
     }                                                                          \
     target.push_back(f);                                                       \
     source.pop_front();                                                        \
                                                                                \
     auto cdt = new credit();                                                   \
-    cdt->setOs(-1);                                                            \
-    cdt->setPort(get_next_port(pi));                                           \
+                                                                               \
+    if (pi >= P / 2) {                                                         \
+      cdt->setOs(-1);                                                          \
+      cdt->setPort(get_next_port(pi));                                         \
+    } else {                                                                   \
+      cdt->setOs(get_root_id());                                               \
+      cdt->setPort(get_nrm_id());                                              \
+    }                                                                          \
     cdt->setVc(vi);                                                            \
     credit_queue_[pi].push_back(cdt);                                          \
   }
 
-void BaseNRC::row_move() {
+void UpperNRC::row_move() {
   for (auto pi = 0; pi < P; pi++) {
     for (auto vi = 0; vi < V; vi++) {
       ROW_MOVE_FOR_BUF(pi, vi);
@@ -202,7 +228,7 @@ void BaseNRC::row_move() {
     }                                                                          \
   }
 
-void BaseNRC::first_virtual_channel_allocation() {
+void UpperNRC::first_virtual_channel_allocation() {
   for (auto ti = 0; ti < H; ti++) {
     for (auto tj = 0; tj < W; tj++) {
       for (auto po = 0; po < H; po++) {
@@ -242,7 +268,7 @@ void BaseNRC::first_virtual_channel_allocation() {
       sa1_result_[ti][tj][po] = -1;                                            \
   }
 
-void BaseNRC::switch_allocation() {
+void UpperNRC::switch_allocation() {
   for (auto ti = 0; ti < H; ti++) {
     for (auto tj = 0; tj < W; tj++) {
       for (auto po = 0; po < H; po++) {
@@ -273,7 +299,7 @@ void BaseNRC::switch_allocation() {
     }                                                                          \
   }
 
-void BaseNRC::switch_traversal() {
+void UpperNRC::switch_traversal() {
   for (auto ti = 0; ti < H; ti++) {
     for (auto tj = 0; tj < W; tj++) {
       for (auto po = 0; po < H; po++) {
@@ -304,8 +330,8 @@ void BaseNRC::switch_traversal() {
     }                                                                          \
   }
 
-void BaseNRC::second_virtual_channel_allocation() {
-  for (auto ti = 0; ti < H; ti++) {
+void UpperNRC::upper_port_second_virtual_channel_allocation() {
+  for (auto ti = H / 2; ti < H; ti++) {
     for (auto tj = 0; tj < W; tj++) {
       for (auto vo = 0; vo < V; vo++) {
         SECOND_VCA_FOR_FLIT(ti, tj, vo);
@@ -314,8 +340,8 @@ void BaseNRC::second_virtual_channel_allocation() {
   }
 }
 
-void BaseNRC::port_allocation() {
-  for (auto po = 0; po < P; po++) {
+void UpperNRC::upper_port_allocation() {
+  for (auto po = P / 2; po < P; po++) {
     auto v = sa2_vcid_[po] + 1, count = 0;
     for (; count < V; v++, count++) {
       auto vcid = v % V, ti = po / W, tj = po % W;
@@ -334,8 +360,8 @@ void BaseNRC::port_allocation() {
   }
 }
 
-void BaseNRC::forward_flit() {
-  for (auto po = 0; po < P; po++) {
+void UpperNRC::upper_port_forward_flit() {
+  for (auto po = P / 2; po < P; po++) {
     auto vcid = sa2_vcid_[po];
     if (vcid == -1)
       continue;
@@ -370,8 +396,6 @@ void BaseNRC::forward_flit() {
       f->setCredit_vc(-1);
     }
 
-    f->setHop_count(f->getHop_count() + 1);
-
     char po_str[20];
     sprintf(po_str, "port_%d$o", po);
     assert(get_channel_available_time(po) <= omnetpp::simTime());
@@ -385,7 +409,60 @@ void BaseNRC::forward_flit() {
   }
 }
 
-void BaseNRC::flit_cb(omnetpp::cMessage *msg) {
+void UpperNRC::lower_port_select_packet() {
+  for (auto po = 0; po < P / 2; po++) {
+    auto ti = po / W;
+    auto tj = po % W;
+    for (auto v = 0; v < H * V; v++) {
+      auto k = v / H;
+      auto vc = v % H;
+      buf &buffer = colbuf_[ti][tj][k][vc];
+      if (buffer.size() < packet_length)
+        continue;
+
+      flit *f = buffer.front();
+      auto next_pi = get_next_port(po);
+      auto next_po = f->getNext_port();
+      if (is_matched(next_po, get_switched_port(next_pi))) {
+        auto root_id = get_root_id();
+        auto os_id = getIndex() * P / 2 + po;
+        auto vc = f->getVcid();
+
+        auto credit =
+            &(root_remote_credit_counter[root_id][os_id][next_po][vc]);
+        if (*credit < packet_length)
+          continue;
+
+        lower_port_forward_packet(po, buffer);
+        *credit -= packet_length;
+
+        break;
+      }
+    }
+  }
+}
+
+void UpperNRC::lower_port_forward_packet(int32_t po, buf &buffer) {
+  char po_cstr[20];
+  sprintf(po_cstr, "port_%d$o", po);
+  for (auto count = 0; count < packet_length; count++) {
+    auto f = buffer.front();
+
+    if (!credit_queue_[po].empty()) {
+      auto cdt = credit_queue_[po].front();
+      f->setCredit_os(cdt->getOs());
+      f->setCredit_port(cdt->getPort());
+      f->setCredit_vc(cdt->getVc());
+      delete cdt;
+      credit_queue_[po].pop_front();
+    }
+
+    sendDelayed(f, count * clk_cycle, po_cstr);
+    buffer.pop_front();
+  }
+}
+
+void UpperNRC::flit_cb(omnetpp::cMessage *msg) {
   flit *f = omnetpp::check_and_cast<flit *>(msg);
   auto p = f->getPort();
   auto v = f->getVcid();
@@ -399,29 +476,20 @@ void BaseNRC::flit_cb(omnetpp::cMessage *msg) {
                        std::string("received flit: ") + f->getName());
 
   if (f->getCredit_vc() != -1) {
+    auto os = f->getCredit_os();
     auto port = f->getCredit_port();
     auto vc = f->getCredit_vc();
-    ++credit_[port][vc];
+
+    if (os == -1)
+      ++credit_[port][vc];
+    else
+      ++root_remote_credit_counter[get_root_id()][os][port][vc];
+
     f->setCredit_vc(-1);
   }
 }
 
-int32_t BaseNRC::get_best_vcid(int32_t port) {
-  if (get_node_num() == P) {
-    return rand() % V;
-  } else {
-    int max_credit = 0, max_vcid = 0;
-    for (int v = 0; v < V; v++) {
-      if (credit_[port][v] > max_credit) {
-        max_credit = credit_[port][v];
-        max_vcid = v;
-      }
-    }
-    return max_vcid;
-  }
-}
-
-omnetpp::simtime_t BaseNRC::get_channel_available_time(int32_t port) {
+omnetpp::simtime_t UpperNRC::get_channel_available_time(int32_t port) {
   char poCstr[20];
   sprintf(poCstr, "port_%d$o", port);
   omnetpp::cChannel *channel = gate(poCstr)->getTransmissionChannel();
@@ -429,13 +497,13 @@ omnetpp::simtime_t BaseNRC::get_channel_available_time(int32_t port) {
   return finishTime;
 }
 
-inline std::string BaseNRC::get_id() {
+inline std::string UpperNRC::get_id() {
   char name[30];
-  sprintf(name, "(BaseNRC_%d,level_%d)", getIndex(), get_curr_level());
+  sprintf(name, "(UpperNRC_%d,level_%d)", getIndex(), get_curr_level());
   return std::string(name);
 }
 
-std::string BaseNRC::get_log(log_levels level, const std::string &msg) {
+std::string UpperNRC::get_log(log_levels level, const std::string &msg) {
   if (log_lvl < level)
     return "";
   std::string lvl_type[4] = {"CRI", "WARN", "INFO", "DBG"};
@@ -446,4 +514,25 @@ std::string BaseNRC::get_log(log_levels level, const std::string &msg) {
   return log_msg;
 }
 
-void BaseNRC::finish() {}
+inline int32_t UpperNRC::get_switched_port(int32_t in_port) {
+  auto clk = uint64_t(omnetpp::simTime().dbl() / period);
+  return (clk % 24 + in_port) % 24;
+}
+
+inline int32_t UpperNRC::get_root_id() {
+  return getParentModule()->getIndex() / 12;
+}
+
+inline int32_t UpperNRC::get_nrm_id() {
+  return getParentModule()->getIndex() % 12;
+}
+
+inline bool UpperNRC::is_matched(int32_t request_po, int32_t switched_po) {
+  if (request_po >= P / 2 && switched_po >= P / 2)
+    return true;
+  if (request_po == switched_po)
+    return true;
+  return false;
+}
+
+void UpperNRC::finish() {}

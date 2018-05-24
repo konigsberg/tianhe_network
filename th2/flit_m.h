@@ -23,12 +23,14 @@
  * <pre>
  * packet flit
  * {
+ *     int hop_count;
  *     int src_id;
  *     int dest_id;
  *     bool is_head;
  *     bool is_tail;
  *     int vcid;
  *     int port;
+ *     int next_port; // for debug
  *     double send_time;
  *     int credit_os;
  *     int credit_port;
@@ -39,12 +41,14 @@
 class flit : public ::omnetpp::cPacket
 {
   protected:
+    int hop_count;
     int src_id;
     int dest_id;
     bool is_head;
     bool is_tail;
     int vcid;
     int port;
+    int next_port;
     double send_time;
     int credit_os;
     int credit_port;
@@ -67,6 +71,8 @@ class flit : public ::omnetpp::cPacket
     virtual void parsimUnpack(omnetpp::cCommBuffer *b) override;
 
     // field getter/setter methods
+    virtual int getHop_count() const;
+    virtual void setHop_count(int hop_count);
     virtual int getSrc_id() const;
     virtual void setSrc_id(int src_id);
     virtual int getDest_id() const;
@@ -79,6 +85,8 @@ class flit : public ::omnetpp::cPacket
     virtual void setVcid(int vcid);
     virtual int getPort() const;
     virtual void setPort(int port);
+    virtual int getNext_port() const;
+    virtual void setNext_port(int next_port);
     virtual double getSend_time() const;
     virtual void setSend_time(double send_time);
     virtual int getCredit_os() const;

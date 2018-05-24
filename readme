@@ -28,3 +28,5 @@ flit直接发送。这样NRC内部的zero-load pass-through latency就是0。目
 2. 建立UpperNRC和LowerNRC的模型，转发表先用纯虚函数实现。
 
 3. 详细考虑一下OpticalSwitch怎么建模。
+
+光开关上下的光纤延迟设为0。最后在node里面计算延迟的时候统一加上。所以hop_count仍然是需要的。
