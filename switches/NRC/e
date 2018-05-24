@@ -1,7 +1,0 @@
-In file included from NRC.cc:1:
-./NRC.h:6:10: fatal error: '../macros.h' file not found
-#include "../macros.h"
-         ^~~~~~~~~~~~~
-1 error generated.
-make: *** [Makefile:106: out/clang-release//NRC.o] Error 1
-make: *** Waiting for unfinished jobs....

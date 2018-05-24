@@ -1,0 +1,30 @@
+天河2号互连网络由计算结点和交换机组成。
+
+switches目录包含交换机的OMNeT++模型。
+
+BaseNRC实现了tail-based high-radix switch的流水线。流水线的功能在纯电互连天河网络中，
+已经得到验证。BaseNRC是最底层和最高层的NRC模型。
+
+我觉得还是不要用继承。每个路由器单独的模型。这样每个模型的行为都很清楚。
+
+UpperNRC的向下端口连接到光开关；LowerNRC的向上端口连接到光开关。
+
+UpperNRC, LowerNRC在网络中分别位于光开关上下两侧。PlainNRC在最底层和最高层。
+
+光开关是基于MRR的开关结构。
+
+初步设计首先要保证flit的路由正确、不发生buffer overflow情况。第二步才是向真实的模型靠近。
+
+电路由器的实现中，为了简化在发送flit时对下一个光开关状态的判断，暂时去掉发送后的pipe环节，
+flit直接发送。这样NRC内部的zero-load pass-through latency就是0。目前我们先确定功能
+正确。
+
+流量控制协议在slides中由详细描述。
+
+此外考虑建立一个testbench，用于测试每个NRC模型的功能。
+
+1. 先建立BaseNRC的功能，实现新的流量控制协议，放在天河的网络中跑一下。
+
+2. 建立UpperNRC和LowerNRC的模型，转发表先用纯虚函数实现。
+
+3. 详细考虑一下OpticalSwitch怎么建模。
