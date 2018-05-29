@@ -158,6 +158,10 @@ void BaseNRC::route_compute() {
     target.push_back(f);                                                       \
     source.pop_front();                                                        \
                                                                                \
+    std::string msg("flit ");                                                  \
+    std::cerr << get_log(log_levels::debug,                                    \
+                         msg + f->getName() + " left for switch buffer");      \
+                                                                               \
     auto cdt = new credit();                                                   \
     cdt->setOs(-1);                                                            \
     cdt->setPort(get_next_port(pi));                                           \
@@ -263,6 +267,10 @@ void BaseNRC::switch_allocation() {
     auto dest_ti = flit_po / W, dest_tj = flit_po % W;                         \
     buf &target = colbuf_[dest_ti][dest_tj][ti][flit_vo];                      \
     target.push_back(f);                                                       \
+                                                                               \
+    std::string msg("flit ");                                                  \
+    std::cerr << get_log(log_levels::debug,                                    \
+                         msg + f->getName() + " left for column buffer");      \
     source.pop_front();                                                        \
     if (f->getIs_tail()) {                                                     \
       vca1_state_[ti][tj][pi][po][vi] = false;                                 \

@@ -64,7 +64,7 @@ private:
   std::deque<flit *> colbuf_[H][W][H][V];
   int32_t vca2_port_[H / 2][W][V];
   int32_t vca2_port_prev_[H / 2][W][V];
-  int32_t sa2_vcid_[P / 2];
-  int32_t credit_[P / 2][V];
+  int32_t sa2_vcid_[P];  // FIXME
+  int32_t credit_[P][V]; // FIXME
   std::deque<credit *> credit_queue_[P];
 };

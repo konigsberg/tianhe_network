@@ -36,7 +36,7 @@ void Node::handleMessage(omnetpp::cMessage *msg) {
 }
 
 void Node::gen_timer_cb() {
-  if (debug_mode && (total_flit_sent_ == 100 || getIndex() >= 10))
+  if (debug_mode && (total_flit_sent_ == 20 || getIndex() >= 10))
     return;
 
   if (send_queue_.size() + sizeof_flit <= nodebuf_capacity) {

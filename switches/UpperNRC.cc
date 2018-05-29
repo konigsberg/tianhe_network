@@ -193,6 +193,10 @@ void UpperNRC::route_compute() {
       next_routing_result_[pi][vi] = -1;                                       \
     }                                                                          \
     target.push_back(f);                                                       \
+                                                                               \
+    std::string msg("flit ");                                                  \
+    std::cerr << get_log(log_levels::debug,                                    \
+                         msg + f->getName() + " left for switch buffer");      \
     source.pop_front();                                                        \
                                                                                \
     auto cdt = new credit();                                                   \
@@ -306,6 +310,10 @@ void UpperNRC::switch_allocation() {
     auto dest_ti = flit_po / W, dest_tj = flit_po % W;                         \
     buf &target = colbuf_[dest_ti][dest_tj][ti][flit_vo];                      \
     target.push_back(f);                                                       \
+                                                                               \
+    std::string msg("flit ");                                                  \
+    std::cerr << get_log(log_levels::debug,                                    \
+                         msg + f->getName() + " left for column buffer");      \
     source.pop_front();                                                        \
     if (f->getIs_tail()) {                                                     \
       vca1_state_[ti][tj][pi][po][vi] = false;                                 \
@@ -363,6 +371,9 @@ void UpperNRC::upper_port_allocation() {
         continue;
       }
       if (credit_[po][vcid] == 0) {
+        std::cerr << get_log(
+            log_levels::debug,
+            "in port allocation failed to allocate because credit is zero");
         continue;
       }
       sa2_vcid_[po] = vcid;
@@ -397,7 +408,9 @@ void UpperNRC::upper_port_forward_flit() {
     flit *f = source.front();
     auto vi = f->getVcid();
     if (credit_[po][vi] == 0) {
-      // std::cerr << get_log(log_levels::debug, "credit is zero");
+      std::string msg("failed to forward flit ");
+      std::cerr << get_log(log_levels::debug,
+                           msg + f->getName() + " because credit is zero");
       continue;
     }
 
@@ -453,8 +466,12 @@ void UpperNRC::lower_port_select_packet() {
 
         auto credit =
             &(root_remote_credit_counter[root_id][os_id][next_po][vc]);
-        if (*credit < packet_length)
+        if (*credit < packet_length) {
+          std::string msg("failed to forward flit ");
+          std::cerr << get_log(log_levels::debug,
+                               msg + f->getName() + " because credit is zero");
           continue;
+        }
 
         if (get_channel_available_time(po) > omnetpp::simTime())
           continue;
