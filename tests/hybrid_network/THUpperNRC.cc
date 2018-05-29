@@ -42,7 +42,7 @@ protected:
 
   int32_t get_next_routing_port(flit *f) override {
     auto dest_id = f->getDest_id();
-    return (dest_id / (32 * 12)) % 12;
+    return (dest_id % (32 * 12)) / 32;
   }
 
   int32_t get_ancestor_level(flit *f) {

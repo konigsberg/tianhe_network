@@ -98,7 +98,8 @@ void Node::flit_cb(omnetpp::cMessage *msg) {
 
   if (dest_id != getIndex()) {
     std::string msg("received wrong flit ");
-    std::cerr << get_log(log_levels::critical, msg + f->getName() + "at node " +
+    std::cerr << get_log(log_levels::critical, msg + f->getName() +
+                                                   " at node " +
                                                    std::to_string(getIndex()));
   }
   assert(dest_id == getIndex());
@@ -140,7 +141,8 @@ flit *Node::flit_factory(bool is_head, bool is_tail, int32_t vcid,
     sprintf(flit_name, "BF%d-%d-to-%d", src_id, flit_id, dest_id);
   }
   flit *f = new flit(flit_name);
-  f->setByteLength(sizeof_flit);
+  // f->setByteLength(sizeof_flit);
+  f->setByteLength(0);
   f->setSrc_id(src_id);
   f->setDest_id(dest_id);
   f->setIs_head(is_head);
@@ -196,7 +198,7 @@ std::string Node::get_log(log_levels level, const std::string &msg) {
   if (log_lvl < level)
     return "";
   std::string lvl_type[4] = {"CRI", "WARN", "INFO", "DBG"};
-  std::string log_msg = lvl_type[int(log_lvl)] + "|at " +
+  std::string log_msg = lvl_type[uint8_t(level)] + "|at " +
                         std::to_string(omnetpp::simTime().dbl() * 1e9) +
                         "ns in " + get_id() + ", ";
   log_msg += msg + '\n';

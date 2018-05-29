@@ -64,6 +64,11 @@ void LowerNRC::initialize() {
   std::fill(routing_result_[0],
             routing_result_[0] + sizeof(routing_result_) / sizeof(int32_t), -1);
 
+  std::fill(next_routing_result_[0],
+            next_routing_result_[0] +
+                sizeof(next_routing_result_) / sizeof(int32_t),
+            -1);
+
   std::fill(credit_[0], credit_[0] + sizeof(credit_) / sizeof(int32_t),
             inbuf_capacity);
 
@@ -130,22 +135,23 @@ void LowerNRC::timer_cb() {
                                                                                \
     if (f->getIs_head() && routing_result_[pi][vi] == -1) {                    \
       auto po = get_routing_port(f);                                           \
-      auto vo = -1;                                                            \
+      auto vo = rand() % V;                                                    \
                                                                                \
       if (po >= P / 2) {                                                       \
         auto next_po = get_next_routing_port(f);                               \
         f->setNext_port(next_po);                                              \
-        next_routing_result_[pi] = next_po;                                    \
+        std::cerr << get_log(log_levels::debug,                                \
+                             std::string("next route port of flit ") +         \
+                                 f->getName() + " is " +                       \
+                                 std::to_string(next_po));                     \
+        next_routing_result_[pi][vi] = next_po;                                \
         if (next_po < P / 2)                                                   \
           vo = rand() % (V / 2) + V / 2;                                       \
         else                                                                   \
           vo = rand() % V;                                                     \
       } else                                                                   \
-        next_routing_result_[pi] = -1;                                         \
+        next_routing_result_[pi][vi] = -1;                                     \
                                                                                \
-      std::cerr << get_log(log_levels::info,                                   \
-                           std::string("flit: ") + f->getName() +              \
-                               " routed to port " + std::to_string(po));       \
       f->setPort(po);                                                          \
       f->setVcid(vo);                                                          \
       routing_result_[pi][vi] = po * V + vo;                                   \
@@ -154,7 +160,12 @@ void LowerNRC::timer_cb() {
       auto vo = routing_result_[pi][vi] % V;                                   \
       f->setPort(po);                                                          \
       f->setVcid(vo);                                                          \
-      f->setNext_port(next_routing_result_[pi]);                               \
+      f->setNext_port(next_routing_result_[pi][vi]);                           \
+      if (po >= P / 2)                                                         \
+        std::cerr << get_log(                                                  \
+            log_levels::debug,                                                 \
+            std::string("next route port of flit ") + f->getName() +           \
+                " cached is " + std::to_string(next_routing_result_[pi][vi])); \
     }                                                                          \
   }
 
@@ -185,7 +196,7 @@ void LowerNRC::route_compute() {
                                                                                \
     if (f->getIs_tail()) {                                                     \
       routing_result_[pi][vi] = -1;                                            \
-      next_routing_result_[pi] = -1;                                           \
+      next_routing_result_[pi][vi] = -1;                                       \
     }                                                                          \
     target.push_back(f);                                                       \
     source.pop_front();                                                        \
@@ -203,7 +214,7 @@ void LowerNRC::route_compute() {
       cdt->setVc(vi);                                                          \
       credit_queue_[pi].push_back(cdt);                                        \
     } else {                                                                   \
-      auto os = (getIndex() - 3) * P / 2 + P / 2;                              \
+      auto os = getIndex() * P / 2 + P / 2;                                    \
       auto port = get_nrm_id();                                                \
       ++cabinet_local_credit_counter[get_cabinet_id()][os][port][vi];          \
     }                                                                          \
@@ -438,9 +449,9 @@ void LowerNRC::upper_port_select_packet() {
       flit *f = buffer.front();
       auto next_pi = get_next_port(po);
       auto next_po = f->getNext_port();
-      if (is_matched(next_po, get_switched_port(next_pi))) {
+      if (is_matched(next_po, get_switched_port(next_pi)) && is_right_time()) {
         auto cabinet_id = get_cabinet_id();
-        auto os_id = (getIndex() - 3) * P / 2 + (po - P / 2);
+        auto os_id = getIndex() * P / 2 + (po - P / 2);
         auto vc = f->getVcid();
 
         int32_t *credit = nullptr;
@@ -451,6 +462,9 @@ void LowerNRC::upper_port_select_packet() {
           credit = &(cabinet_remote_credit_counter[cabinet_id][os_id]
                                                   [next_po - P / 2][vc]);
         if (*credit < packet_length)
+          continue;
+
+        if (get_channel_available_time(po) > omnetpp::simTime())
           continue;
 
         upper_port_forward_packet(po, buffer);
@@ -467,6 +481,7 @@ void LowerNRC::upper_port_forward_packet(int32_t po, buf &buffer) {
   sprintf(po_cstr, "port_%d$o", po);
   for (auto count = 0; count < packet_length; count++) {
     auto f = buffer.front();
+    f->setPort(get_next_port(po));
 
     if (!credit_queue_[po].empty()) {
       auto cdt = credit_queue_[po].front();
@@ -477,6 +492,9 @@ void LowerNRC::upper_port_forward_packet(int32_t po, buf &buffer) {
       credit_queue_[po].pop_front();
     }
 
+    std::cerr << get_log(log_levels::info, std::string("forwarded flit: ") +
+                                               f->getName() + " at port " +
+                                               std::to_string(po));
     sendDelayed(f, count * clk_cycle, po_cstr);
     buffer.pop_front();
   }
@@ -492,8 +510,9 @@ void LowerNRC::flit_cb(omnetpp::cMessage *msg) {
   assert(inbuf_[p][v].size() <= inbuf_capacity);
 
   inbuf_[p][v].push_back(f);
-  std::cerr << get_log(log_levels::info,
-                       std::string("received flit: ") + f->getName());
+  std::cerr << get_log(log_levels::info, std::string("received flit ") +
+                                             f->getName() + " from port " +
+                                             std::to_string(p));
 
   if (f->getCredit_vc() != -1) {
     auto os = f->getCredit_os();
@@ -527,7 +546,7 @@ std::string LowerNRC::get_log(log_levels level, const std::string &msg) {
   if (log_lvl < level)
     return "";
   std::string lvl_type[4] = {"CRI", "WARN", "INFO", "DBG"};
-  std::string log_msg = lvl_type[uint8_t(log_lvl)] + "|at " +
+  std::string log_msg = lvl_type[uint8_t(level)] + "|at " +
                         std::to_string(omnetpp::simTime().dbl() * 1e9) +
                         "ns in " + get_id() + ", ";
   log_msg += msg + '\n';
@@ -553,6 +572,10 @@ inline bool LowerNRC::is_matched(int32_t request_po, int32_t switched_po) {
   if (request_po == switched_po)
     return true;
   return false;
+}
+
+inline bool LowerNRC::is_right_time() {
+  return uint64_t(omnetpp::simTime().dbl() / clk_cycle) % window == 0;
 }
 
 void LowerNRC::finish() {}

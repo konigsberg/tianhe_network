@@ -162,10 +162,10 @@ module NRM
 		inout port_29;
 		inout port_30;
 		inout port_31;
-		inout port_32 @loose;
-		inout port_33 @loose;
-		inout port_34 @loose;
-		inout port_35 @loose;
+		inout port_32;
+		inout port_33;
+		inout port_34;
+		inout port_35;
 		inout port_36;
 		inout port_37;
 		inout port_38;
@@ -198,10 +198,10 @@ module NRM
 		inout port_65;
 		inout port_66;
 		inout port_67;
-		inout port_68;
-		inout port_69;
-		inout port_70;
-		inout port_71;
+		inout port_68 @loose;
+		inout port_69 @loose;
+		inout port_70 @loose;
+		inout port_71 @loose;
 
     types:
         channel C extends ned.DatarateChannel {
@@ -276,10 +276,10 @@ module NRM
         base_nrc[2].port_6 <--> port_30;
         base_nrc[2].port_7 <--> port_31;
 
-				base_nrc[2].port_8 <--> port_32;
-				base_nrc[2].port_9 <--> port_33;
-				base_nrc[2].port_10 <--> port_34;
-				base_nrc[2].port_11 <--> port_35;
+				base_nrc[2].port_8 <--> port_68;
+				base_nrc[2].port_9 <--> port_69;
+				base_nrc[2].port_10 <--> port_70;
+				base_nrc[2].port_11 <--> port_71;
 
         base_nrc[2].port_12 <--> C <--> lower_nrc[0].port_8;
         base_nrc[2].port_13 <--> C <--> lower_nrc[0].port_9;
@@ -294,44 +294,44 @@ module NRM
         base_nrc[2].port_22 <--> C <--> lower_nrc[2].port_10;
         base_nrc[2].port_23 <--> C <--> lower_nrc[2].port_11;
 
-        lower_nrc[0].port_12 <--> port_36;
-        lower_nrc[0].port_13 <--> port_37;
-        lower_nrc[0].port_14 <--> port_38;
-        lower_nrc[0].port_15 <--> port_39;
-        lower_nrc[0].port_16 <--> port_40;
-        lower_nrc[0].port_17 <--> port_41;
-        lower_nrc[0].port_18 <--> port_42;
-        lower_nrc[0].port_19 <--> port_43;
-        lower_nrc[0].port_20 <--> port_44;
-        lower_nrc[0].port_21 <--> port_45;
-        lower_nrc[0].port_22 <--> port_46;
-        lower_nrc[0].port_23 <--> port_47;
+        lower_nrc[0].port_12 <--> port_32;
+        lower_nrc[0].port_13 <--> port_33;
+        lower_nrc[0].port_14 <--> port_34;
+        lower_nrc[0].port_15 <--> port_35;
+        lower_nrc[0].port_16 <--> port_36;
+        lower_nrc[0].port_17 <--> port_37;
+        lower_nrc[0].port_18 <--> port_38;
+        lower_nrc[0].port_19 <--> port_39;
+        lower_nrc[0].port_20 <--> port_40;
+        lower_nrc[0].port_21 <--> port_41;
+        lower_nrc[0].port_22 <--> port_42;
+        lower_nrc[0].port_23 <--> port_43;
 
-        lower_nrc[1].port_12 <--> port_48;
-        lower_nrc[1].port_13 <--> port_49;
-        lower_nrc[1].port_14 <--> port_50;
-        lower_nrc[1].port_15 <--> port_51;
-        lower_nrc[1].port_16 <--> port_52;
-        lower_nrc[1].port_17 <--> port_53;
-        lower_nrc[1].port_18 <--> port_54;
-        lower_nrc[1].port_19 <--> port_55;
-        lower_nrc[1].port_20 <--> port_56;
-        lower_nrc[1].port_21 <--> port_57;
-        lower_nrc[1].port_22 <--> port_58;
-        lower_nrc[1].port_23 <--> port_59;
+        lower_nrc[1].port_12 <--> port_44;
+        lower_nrc[1].port_13 <--> port_45;
+        lower_nrc[1].port_14 <--> port_46;
+        lower_nrc[1].port_15 <--> port_47;
+        lower_nrc[1].port_16 <--> port_48;
+        lower_nrc[1].port_17 <--> port_49;
+        lower_nrc[1].port_18 <--> port_50;
+        lower_nrc[1].port_19 <--> port_51;
+        lower_nrc[1].port_20 <--> port_52;
+        lower_nrc[1].port_21 <--> port_53;
+        lower_nrc[1].port_22 <--> port_54;
+        lower_nrc[1].port_23 <--> port_55;
 
-        lower_nrc[2].port_12 <--> port_60;
-        lower_nrc[2].port_13 <--> port_61;
-        lower_nrc[2].port_14 <--> port_62;
-        lower_nrc[2].port_15 <--> port_63;
-        lower_nrc[2].port_16 <--> port_64;
-        lower_nrc[2].port_17 <--> port_65;
-        lower_nrc[2].port_18 <--> port_66;
-        lower_nrc[2].port_19 <--> port_67;
-        lower_nrc[2].port_20 <--> port_68;
-        lower_nrc[2].port_21 <--> port_69;
-        lower_nrc[2].port_22 <--> port_70;
-        lower_nrc[2].port_23 <--> port_71;
+        lower_nrc[2].port_12 <--> port_56;
+        lower_nrc[2].port_13 <--> port_57;
+        lower_nrc[2].port_14 <--> port_58;
+        lower_nrc[2].port_15 <--> port_59;
+        lower_nrc[2].port_16 <--> port_60;
+        lower_nrc[2].port_17 <--> port_61;
+        lower_nrc[2].port_18 <--> port_62;
+        lower_nrc[2].port_19 <--> port_63;
+        lower_nrc[2].port_20 <--> port_64;
+        lower_nrc[2].port_21 <--> port_65;
+        lower_nrc[2].port_22 <--> port_66;
+        lower_nrc[2].port_23 <--> port_67;
 
 }
 

@@ -30,7 +30,7 @@ PROJECTRELATIVE_PATH =
 O = $(PROJECT_OUTPUT_DIR)/$(CONFIGNAME)/$(PROJECTRELATIVE_PATH)
 
 # Object files for local .cc, .msg and .sm files
-OBJS = $O/BaseNRC.o $O/LowerNRC.o $O/OpticalSwitch.o $O/UpperNRC.o  ../th2/out/clang-debug/*.o
+OBJS = $O/BaseNRC.o $O/LowerNRC.o $O/UpperNRC.o  ../th2/out/clang-debug/*.o
 
 # Message files
 MSGFILES =

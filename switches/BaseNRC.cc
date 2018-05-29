@@ -116,9 +116,6 @@ void BaseNRC::timer_cb() {
     if (f->getIs_head() && routing_result_[pi][vi] == -1) {                    \
       auto po = get_routing_port(f);                                           \
       auto vo = get_best_vcid(po);                                             \
-      std::cerr << get_log(log_levels::info,                                   \
-                           std::string("flit: ") + f->getName() +              \
-                               " routed to port " + std::to_string(po));       \
       f->setPort(po);                                                          \
       f->setVcid(vo);                                                          \
       routing_result_[pi][vi] = po * V + vo;                                   \
@@ -395,8 +392,9 @@ void BaseNRC::flit_cb(omnetpp::cMessage *msg) {
   assert(inbuf_[p][v].size() <= inbuf_capacity);
 
   inbuf_[p][v].push_back(f);
-  std::cerr << get_log(log_levels::info,
-                       std::string("received flit: ") + f->getName());
+  std::cerr << get_log(log_levels::info, std::string("received flit ") +
+                                             f->getName() + " from port " +
+                                             std::to_string(p));
 
   if (f->getCredit_vc() != -1) {
     auto port = f->getCredit_port();
@@ -439,7 +437,7 @@ std::string BaseNRC::get_log(log_levels level, const std::string &msg) {
   if (log_lvl < level)
     return "";
   std::string lvl_type[4] = {"CRI", "WARN", "INFO", "DBG"};
-  std::string log_msg = lvl_type[uint8_t(log_lvl)] + "|at " +
+  std::string log_msg = lvl_type[uint8_t(level)] + "|at " +
                         std::to_string(omnetpp::simTime().dbl() * 1e9) +
                         "ns in " + get_id() + ", ";
   log_msg += msg + '\n';

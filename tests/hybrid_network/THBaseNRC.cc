@@ -7,8 +7,8 @@ protected:
   int32_t get_node_num() override { return 18432; }
 
   int32_t get_curr_level() override {
-    std::string name = par("name").stdstringValue();
-    if (name == "NRM")
+    std::string parent_name = getParentModule()->par("name").stdstringValue();
+    if (parent_name == "NRM")
       return 1;
     return 5;
   }
@@ -16,7 +16,8 @@ protected:
   int32_t get_routing_port(flit *f) override {
     auto in_port = f->getPort(), out_port = 0;
     auto curr_level = get_curr_level();
-    auto src_id = f->getSrc_id(), dest_id = f->getDest_id();
+    auto src_id = f->getSrc_id();
+    auto dest_id = f->getDest_id();
     auto max_id = std::max(src_id, dest_id);
     auto min_id = std::min(src_id, dest_id);
     auto ancestor_level = 0;
@@ -57,7 +58,7 @@ protected:
       assert(this_port >= 12);
       port = (this_port - 12) % 4 + getIndex() * 4;
     } else {
-      port = this_port % 6 + (getIndex() - 4) * 6 + 12;
+      port = this_port % 6 + getIndex() * 6 + 12;
     }
     assert(port >= 0 && port <= 23);
     return port;

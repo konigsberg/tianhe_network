@@ -23,7 +23,8 @@ constexpr double clk_cycle = 1 / clk_freq;
 
 constexpr double sim_start_time = 1;
 
-enum class log_levels : int32_t { critical = 0, warn, info, debug };
-enum class traffic_patterns : int32_t { uniform = 0 };
+enum class log_levels : uint8_t { critical = 0, warn, info, debug };
+enum class traffic_patterns : uint8_t { uniform = 0 };
 
-constexpr double period = (packet_length + 1) * clk_cycle;
+constexpr uint64_t window = 1 + packet_length;
+constexpr double period = window * clk_cycle;

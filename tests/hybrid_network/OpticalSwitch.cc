@@ -15,11 +15,19 @@ protected:
 
     flit *f = omnetpp::check_and_cast<flit *>(msg);
     auto p = f->getPort();
+    std::cerr << get_log(log_levels::info, std::string("received flit: ") +
+                                               f->getName() + " from port " +
+                                               std::to_string(p));
 
     auto switched_port = get_switched_port(p);
-    assert(f->getNext_port() == switched_port);
+    // std::cerr << "next port in flit is " << f->getNext_port()
+    // << ", switched port now is " << switched_port << std::endl;
+    assert(is_matched(f->getNext_port(), switched_port));
     assert(get_channel_available_time(switched_port) <= omnetpp::simTime());
     f->setHop_count(f->getHop_count() + 1);
+
+    auto next_pi = get_next_port(switched_port);
+    f->setPort(next_pi);
 
     char po_str[20];
     sprintf(po_str, "port_%d$o", switched_port);
@@ -52,11 +60,25 @@ protected:
     if (log_lvl < level)
       return "";
     std::string lvl_type[4] = {"CRI", "WARN", "INFO", "DBG"};
-    std::string log_msg = lvl_type[uint8_t(log_lvl)] + "|at " +
+    std::string log_msg = lvl_type[uint8_t(level)] + "|at " +
                           std::to_string(omnetpp::simTime().dbl() * 1e9) +
                           "ns in " + get_id() + ", ";
     log_msg += msg + '\n';
     return log_msg;
+  }
+
+  bool is_matched(int32_t request_po, int32_t switched_po) {
+    if (request_po >= P / 2 && switched_po >= P / 2)
+      return true;
+    if (request_po == switched_po)
+      return true;
+    return false;
+  }
+
+  int32_t get_next_port(int32_t this_port) {
+    if (this_port < 12)
+      return (getIndex() % 36) % 12 + 12;
+    return (getIndex() / 36) % 12;
   }
 };
 

@@ -37,7 +37,7 @@ protected:
 
     auto port = 0;
     if (this_port < 12)
-      port = this_port % 4 + (getIndex() - 3) * 4 + 12;
+      port = this_port % 4 + getIndex() * 4 + 12;
     else
       port = getParentModule()->getIndex() % 12;
     assert(port >= 0 && port <= 23);

@@ -49,12 +49,13 @@ protected:
   int32_t get_root_id();
   int32_t get_nrm_id();
   bool is_matched(int32_t request_po, int32_t switched_po);
+  bool is_right_time();
 
 private:
   omnetpp::cMessage *self_timer_ = nullptr;
   std::deque<flit *> inbuf_[P][V];
   int32_t routing_result_[P][V];
-  int32_t next_routing_result_[P];
+  int32_t next_routing_result_[P][V];
   bool vca1_state_[H][W][W][H][V];
   int32_t vca1_result_[H][W][H][V];
   int32_t vca1_result_prev_[H][W][H][V];
