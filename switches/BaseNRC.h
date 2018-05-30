@@ -27,6 +27,7 @@ protected:
   void second_virtual_channel_allocation();
   void port_allocation();
   void forward_flit();
+  void dump_colbuf();
 
   virtual int32_t get_curr_level() = 0;
   virtual int32_t get_routing_port(flit *f) = 0;

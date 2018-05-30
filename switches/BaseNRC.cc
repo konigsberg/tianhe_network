@@ -105,6 +105,7 @@ void BaseNRC::timer_cb() {
   second_virtual_channel_allocation();
   port_allocation();
   forward_flit();
+  dump_colbuf();
 }
 
 #define ROUTE_COMPUTE_FOR_FLIT(pi, vi)                                         \
@@ -300,8 +301,12 @@ void BaseNRC::switch_traversal() {
       if (buffer.empty())                                                      \
         continue;                                                              \
                                                                                \
-      if (credit_[ti * W + tj][vo] < packet_length)                            \
+      if (credit_[ti * W + tj][vo] < packet_length) {                          \
+        std::string msg("in second vca, credit is ");                          \
+        std::cerr << get_log(log_levels::debug,                                \
+                             msg + std::to_string(credit_[ti * W + tj][vo]));  \
         continue;                                                              \
+      }                                                                        \
                                                                                \
       vca2_port_[ti][tj][vo] = port;                                           \
       vca2_port_prev_[ti][tj][vo] = port;                                      \
@@ -412,19 +417,27 @@ void BaseNRC::flit_cb(omnetpp::cMessage *msg) {
   }
 }
 
+void BaseNRC::dump_colbuf() {
+  for (auto ti = 0; ti < H; ti++)
+    for (auto tj = 0; tj < W; tj++)
+      for (auto k = 0; k < H; k++)
+        for (auto v = 0; v < V; v++)
+          for (auto &f : colbuf_[ti][tj][k][v])
+            std::cerr << get_log(log_levels::info, f->getName());
+}
+
 int32_t BaseNRC::get_best_vcid(int32_t port) {
   if (get_node_num() == P) {
     return rand() % V;
-  } else {
-    int max_credit = 0, max_vcid = 0;
-    for (int v = 0; v < V; v++) {
-      if (credit_[port][v] > max_credit) {
-        max_credit = credit_[port][v];
-        max_vcid = v;
-      }
-    }
-    return max_vcid;
   }
+  int max_credit = 0, max_vcid = 0;
+  for (int v = 0; v < V; v++) {
+    if (credit_[port][v] > max_credit) {
+      max_credit = credit_[port][v];
+      max_vcid = v;
+    }
+  }
+  return max_vcid;
 }
 
 omnetpp::simtime_t BaseNRC::get_channel_available_time(int32_t port) {
