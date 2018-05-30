@@ -13,17 +13,18 @@ def main():
             flit_gen_count += int(words[-1])
         elif 'total_flit_sent' in line:
             flit_sent_count += int(words[-1])
-        elif 'total_flit_received' in lines:
+        elif 'total_flit_received' in line:
             flit_recv_count += int(words[-1])
-        elif 'avg_latency' in lines:
+        elif 'avg_latency' in line:
             avg_latency_total += double(words[-1])
             avg_latency_count += 1
 
-    print('total_flit_gen = ' + str(total_flit_gen))
-    print('total_flit_sent = ' + str(total_flit_sent))
-    print('total_flit_recv = ' + str(total_flit_recv))
-    print('throughput = ' + str(total_flit_recv / total_flit_gen))
-    print('average latency = ' + str(avg_latency_total / avg_latency_count))
+    print('total_flit_gen = ' + str(flit_gen_count))
+    print('total_flit_sent = ' + str(flit_sent_count))
+    print('total_flit_recv = ' + str(flit_recv_count))
+    print('throughput = ' + str(total_flit_recv / total_flit_gen * 100) + ' %')
+    print('average latency = ' + str(avg_latency_total / avg_latency_count
+                                     * 1e9) + ' ns')
 
 
 if __name__ == '__main__':

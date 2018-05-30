@@ -12,16 +12,20 @@ BaseNRC::~BaseNRC() {
   cancelAndDelete(self_timer_);
 
   // clear inbuf
+  auto inbuf_flits = 0;
   for (auto i = 0; i < P; i++) {
     for (auto j = 0; j < V; j++) {
       while (!inbuf_[i][j].empty()) {
         delete inbuf_[i][j].front();
         inbuf_[i][j].pop_front();
+        inbuf_flits++;
       }
     }
   }
+  recordScalar("inbuf_flits", inbuf_flits);
 
   // clear swtbuf
+  auto swtbuf_flits = 0;
   for (auto i = 0; i < H; i++)
     for (auto j = 0; j < W; j++)
       for (auto k = 0; k < W; k++)
@@ -30,12 +34,15 @@ BaseNRC::~BaseNRC() {
             while (!swtbuf_[i][j][k][b][v].empty()) {
               delete swtbuf_[i][j][k][b][v].front();
               swtbuf_[i][j][k][b][v].pop_front();
+              swtbuf_flits++;
             }
+  recordScalar("swtbuf_flits", swtbuf_flits);
 
   // clearing free_msg_queue and forward_queue is unnecessary.
   // pipeline is removed. free_msg is integrated into flit.
 
   // clear colbuf
+  auto colbuf_flits = 0;
   for (auto i = 0; i < H; i++)
     for (auto j = 0; j < W; j++)
       for (auto k = 0; k < H; k++)
@@ -43,7 +50,9 @@ BaseNRC::~BaseNRC() {
           while (!colbuf_[i][j][k][v].empty()) {
             delete colbuf_[i][j][k][v].front();
             colbuf_[i][j][k][v].pop_front();
+            colbuf_flits++;
           }
+  recordScalar("colbuf_flits", colbuf_flits);
 
   // clear credit_queue
   for (auto p = 0; p < P; p++) {
@@ -410,6 +419,7 @@ void BaseNRC::flit_cb(omnetpp::cMessage *msg) {
                                              std::to_string(p));
 
   if (f->getCredit_vc() != -1) {
+    std::cerr << get_log(log_levels::debug, "credit inc message roger");
     auto port = f->getCredit_port();
     auto vc = f->getCredit_vc();
     ++credit_[port][vc];
