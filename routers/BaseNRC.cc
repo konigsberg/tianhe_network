@@ -114,7 +114,6 @@ void BaseNRC::timer_cb() {
   second_virtual_channel_allocation();
   port_allocation();
   forward_flit();
-  dump_colbuf();
 }
 
 #define ROUTE_COMPUTE_FOR_FLIT(pi, vi)                                         \
@@ -167,10 +166,6 @@ void BaseNRC::route_compute() {
     }                                                                          \
     target.push_back(f);                                                       \
     source.pop_front();                                                        \
-                                                                               \
-    std::string msg("flit ");                                                  \
-    std::cerr << get_log(log_levels::debug,                                    \
-                         msg + f->getName() + " left for switch buffer");      \
                                                                                \
     auto cdt = new credit();                                                   \
     cdt->setOs(-1);                                                            \
@@ -278,9 +273,6 @@ void BaseNRC::switch_allocation() {
     buf &target = colbuf_[dest_ti][dest_tj][ti][flit_vo];                      \
     target.push_back(f);                                                       \
                                                                                \
-    std::string msg("flit ");                                                  \
-    std::cerr << get_log(log_levels::debug,                                    \
-                         msg + f->getName() + " left for column buffer");      \
     source.pop_front();                                                        \
     if (f->getIs_tail()) {                                                     \
       vca1_state_[ti][tj][pi][po][vi] = false;                                 \
@@ -311,9 +303,6 @@ void BaseNRC::switch_traversal() {
         continue;                                                              \
                                                                                \
       if (credit_[ti * W + tj][vo] < packet_length) {                          \
-        std::string msg("in second vca, credit is ");                          \
-        std::cerr << get_log(log_levels::debug,                                \
-                             msg + std::to_string(credit_[ti * W + tj][vo]));  \
         continue;                                                              \
       }                                                                        \
                                                                                \
@@ -425,15 +414,6 @@ void BaseNRC::flit_cb(omnetpp::cMessage *msg) {
     ++credit_[port][vc];
     f->setCredit_vc(-1);
   }
-}
-
-void BaseNRC::dump_colbuf() {
-  for (auto ti = 0; ti < H; ti++)
-    for (auto tj = 0; tj < W; tj++)
-      for (auto k = 0; k < H; k++)
-        for (auto v = 0; v < V; v++)
-          for (auto &f : colbuf_[ti][tj][k][v])
-            std::cerr << get_log(log_levels::info, f->getName());
 }
 
 int32_t BaseNRC::get_best_vcid(int32_t port) {

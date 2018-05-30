@@ -149,10 +149,6 @@ void LowerNRC::timer_cb() {
       if (po >= P / 2) {                                                       \
         auto next_po = get_next_routing_port(f);                               \
         f->setNext_port(next_po);                                              \
-        std::cerr << get_log(log_levels::debug,                                \
-                             std::string("next route port of flit ") +         \
-                                 f->getName() + " is " +                       \
-                                 std::to_string(next_po));                     \
         next_routing_result_[pi][vi] = next_po;                                \
         if (next_po < P / 2)                                                   \
           vo = rand() % (V / 2) + V / 2;                                       \
@@ -170,11 +166,6 @@ void LowerNRC::timer_cb() {
       f->setPort(po);                                                          \
       f->setVcid(vo);                                                          \
       f->setNext_port(next_routing_result_[pi][vi]);                           \
-      if (po >= P / 2)                                                         \
-        std::cerr << get_log(                                                  \
-            log_levels::debug,                                                 \
-            std::string("next route port of flit ") + f->getName() +           \
-                " cached is " + std::to_string(next_routing_result_[pi][vi])); \
     }                                                                          \
   }
 
