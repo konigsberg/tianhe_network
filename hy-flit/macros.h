@@ -28,3 +28,4 @@ enum class traffic_patterns : uint8_t { uniform = 0 };
 
 constexpr uint64_t window = 1 + packet_length;
 constexpr double period = window * clk_cycle;
+constexpr double margin = 0.3 * clk_cycle;

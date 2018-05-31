@@ -1,5 +1,5 @@
 //
-// Generated file, do not edit! Created by nedtool 5.2 from credit.msg.
+// Generated file, do not edit! Created by nedtool 5.2 from exchange.msg.
 //
 
 // Disable warnings about unused variables, empty switch stmts, etc:
@@ -26,7 +26,7 @@
 
 #include <iostream>
 #include <sstream>
-#include "credit_m.h"
+#include "exchange_m.h"
 
 namespace omnetpp {
 
@@ -177,25 +177,27 @@ inline std::ostream& operator<<(std::ostream& out, const std::vector<T,A>& vec)
     return out;
 }
 
-Register_Class(credit)
+Register_Class(exchange)
 
-credit::credit(const char *name, short kind) : ::omnetpp::cPacket(name,kind)
+exchange::exchange(const char *name, short kind) : ::omnetpp::cPacket(name,kind)
 {
+    this->type = 0;
     this->os = 0;
     this->port = 0;
     this->vc = 0;
+    this->credit = 0;
 }
 
-credit::credit(const credit& other) : ::omnetpp::cPacket(other)
+exchange::exchange(const exchange& other) : ::omnetpp::cPacket(other)
 {
     copy(other);
 }
 
-credit::~credit()
+exchange::~exchange()
 {
 }
 
-credit& credit::operator=(const credit& other)
+exchange& exchange::operator=(const exchange& other)
 {
     if (this==&other) return *this;
     ::omnetpp::cPacket::operator=(other);
@@ -203,66 +205,92 @@ credit& credit::operator=(const credit& other)
     return *this;
 }
 
-void credit::copy(const credit& other)
+void exchange::copy(const exchange& other)
 {
+    this->type = other.type;
     this->os = other.os;
     this->port = other.port;
     this->vc = other.vc;
+    this->credit = other.credit;
 }
 
-void credit::parsimPack(omnetpp::cCommBuffer *b) const
+void exchange::parsimPack(omnetpp::cCommBuffer *b) const
 {
     ::omnetpp::cPacket::parsimPack(b);
+    doParsimPacking(b,this->type);
     doParsimPacking(b,this->os);
     doParsimPacking(b,this->port);
     doParsimPacking(b,this->vc);
+    doParsimPacking(b,this->credit);
 }
 
-void credit::parsimUnpack(omnetpp::cCommBuffer *b)
+void exchange::parsimUnpack(omnetpp::cCommBuffer *b)
 {
     ::omnetpp::cPacket::parsimUnpack(b);
+    doParsimUnpacking(b,this->type);
     doParsimUnpacking(b,this->os);
     doParsimUnpacking(b,this->port);
     doParsimUnpacking(b,this->vc);
+    doParsimUnpacking(b,this->credit);
 }
 
-int credit::getOs() const
+int exchange::getType() const
+{
+    return this->type;
+}
+
+void exchange::setType(int type)
+{
+    this->type = type;
+}
+
+int exchange::getOs() const
 {
     return this->os;
 }
 
-void credit::setOs(int os)
+void exchange::setOs(int os)
 {
     this->os = os;
 }
 
-int credit::getPort() const
+int exchange::getPort() const
 {
     return this->port;
 }
 
-void credit::setPort(int port)
+void exchange::setPort(int port)
 {
     this->port = port;
 }
 
-int credit::getVc() const
+int exchange::getVc() const
 {
     return this->vc;
 }
 
-void credit::setVc(int vc)
+void exchange::setVc(int vc)
 {
     this->vc = vc;
 }
 
-class creditDescriptor : public omnetpp::cClassDescriptor
+int exchange::getCredit() const
+{
+    return this->credit;
+}
+
+void exchange::setCredit(int credit)
+{
+    this->credit = credit;
+}
+
+class exchangeDescriptor : public omnetpp::cClassDescriptor
 {
   private:
     mutable const char **propertynames;
   public:
-    creditDescriptor();
-    virtual ~creditDescriptor();
+    exchangeDescriptor();
+    virtual ~exchangeDescriptor();
 
     virtual bool doesSupport(omnetpp::cObject *obj) const override;
     virtual const char **getPropertyNames() const override;
@@ -284,24 +312,24 @@ class creditDescriptor : public omnetpp::cClassDescriptor
     virtual void *getFieldStructValuePointer(void *object, int field, int i) const override;
 };
 
-Register_ClassDescriptor(creditDescriptor)
+Register_ClassDescriptor(exchangeDescriptor)
 
-creditDescriptor::creditDescriptor() : omnetpp::cClassDescriptor("credit", "omnetpp::cPacket")
+exchangeDescriptor::exchangeDescriptor() : omnetpp::cClassDescriptor("exchange", "omnetpp::cPacket")
 {
     propertynames = nullptr;
 }
 
-creditDescriptor::~creditDescriptor()
+exchangeDescriptor::~exchangeDescriptor()
 {
     delete[] propertynames;
 }
 
-bool creditDescriptor::doesSupport(omnetpp::cObject *obj) const
+bool exchangeDescriptor::doesSupport(omnetpp::cObject *obj) const
 {
-    return dynamic_cast<credit *>(obj)!=nullptr;
+    return dynamic_cast<exchange *>(obj)!=nullptr;
 }
 
-const char **creditDescriptor::getPropertyNames() const
+const char **exchangeDescriptor::getPropertyNames() const
 {
     if (!propertynames) {
         static const char *names[] = {  nullptr };
@@ -312,19 +340,19 @@ const char **creditDescriptor::getPropertyNames() const
     return propertynames;
 }
 
-const char *creditDescriptor::getProperty(const char *propertyname) const
+const char *exchangeDescriptor::getProperty(const char *propertyname) const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
     return basedesc ? basedesc->getProperty(propertyname) : nullptr;
 }
 
-int creditDescriptor::getFieldCount() const
+int exchangeDescriptor::getFieldCount() const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
-    return basedesc ? 3+basedesc->getFieldCount() : 3;
+    return basedesc ? 5+basedesc->getFieldCount() : 5;
 }
 
-unsigned int creditDescriptor::getFieldTypeFlags(int field) const
+unsigned int exchangeDescriptor::getFieldTypeFlags(int field) const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
     if (basedesc) {
@@ -336,11 +364,13 @@ unsigned int creditDescriptor::getFieldTypeFlags(int field) const
         FD_ISEDITABLE,
         FD_ISEDITABLE,
         FD_ISEDITABLE,
+        FD_ISEDITABLE,
+        FD_ISEDITABLE,
     };
-    return (field>=0 && field<3) ? fieldTypeFlags[field] : 0;
+    return (field>=0 && field<5) ? fieldTypeFlags[field] : 0;
 }
 
-const char *creditDescriptor::getFieldName(int field) const
+const char *exchangeDescriptor::getFieldName(int field) const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
     if (basedesc) {
@@ -349,24 +379,28 @@ const char *creditDescriptor::getFieldName(int field) const
         field -= basedesc->getFieldCount();
     }
     static const char *fieldNames[] = {
+        "type",
         "os",
         "port",
         "vc",
+        "credit",
     };
-    return (field>=0 && field<3) ? fieldNames[field] : nullptr;
+    return (field>=0 && field<5) ? fieldNames[field] : nullptr;
 }
 
-int creditDescriptor::findField(const char *fieldName) const
+int exchangeDescriptor::findField(const char *fieldName) const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
     int base = basedesc ? basedesc->getFieldCount() : 0;
-    if (fieldName[0]=='o' && strcmp(fieldName, "os")==0) return base+0;
-    if (fieldName[0]=='p' && strcmp(fieldName, "port")==0) return base+1;
-    if (fieldName[0]=='v' && strcmp(fieldName, "vc")==0) return base+2;
+    if (fieldName[0]=='t' && strcmp(fieldName, "type")==0) return base+0;
+    if (fieldName[0]=='o' && strcmp(fieldName, "os")==0) return base+1;
+    if (fieldName[0]=='p' && strcmp(fieldName, "port")==0) return base+2;
+    if (fieldName[0]=='v' && strcmp(fieldName, "vc")==0) return base+3;
+    if (fieldName[0]=='c' && strcmp(fieldName, "credit")==0) return base+4;
     return basedesc ? basedesc->findField(fieldName) : -1;
 }
 
-const char *creditDescriptor::getFieldTypeString(int field) const
+const char *exchangeDescriptor::getFieldTypeString(int field) const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
     if (basedesc) {
@@ -378,11 +412,13 @@ const char *creditDescriptor::getFieldTypeString(int field) const
         "int",
         "int",
         "int",
+        "int",
+        "int",
     };
-    return (field>=0 && field<3) ? fieldTypeStrings[field] : nullptr;
+    return (field>=0 && field<5) ? fieldTypeStrings[field] : nullptr;
 }
 
-const char **creditDescriptor::getFieldPropertyNames(int field) const
+const char **exchangeDescriptor::getFieldPropertyNames(int field) const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
     if (basedesc) {
@@ -395,7 +431,7 @@ const char **creditDescriptor::getFieldPropertyNames(int field) const
     }
 }
 
-const char *creditDescriptor::getFieldProperty(int field, const char *propertyname) const
+const char *exchangeDescriptor::getFieldProperty(int field, const char *propertyname) const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
     if (basedesc) {
@@ -408,7 +444,7 @@ const char *creditDescriptor::getFieldProperty(int field, const char *propertyna
     }
 }
 
-int creditDescriptor::getFieldArraySize(void *object, int field) const
+int exchangeDescriptor::getFieldArraySize(void *object, int field) const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
     if (basedesc) {
@@ -416,13 +452,13 @@ int creditDescriptor::getFieldArraySize(void *object, int field) const
             return basedesc->getFieldArraySize(object, field);
         field -= basedesc->getFieldCount();
     }
-    credit *pp = (credit *)object; (void)pp;
+    exchange *pp = (exchange *)object; (void)pp;
     switch (field) {
         default: return 0;
     }
 }
 
-const char *creditDescriptor::getFieldDynamicTypeString(void *object, int field, int i) const
+const char *exchangeDescriptor::getFieldDynamicTypeString(void *object, int field, int i) const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
     if (basedesc) {
@@ -430,13 +466,13 @@ const char *creditDescriptor::getFieldDynamicTypeString(void *object, int field,
             return basedesc->getFieldDynamicTypeString(object,field,i);
         field -= basedesc->getFieldCount();
     }
-    credit *pp = (credit *)object; (void)pp;
+    exchange *pp = (exchange *)object; (void)pp;
     switch (field) {
         default: return nullptr;
     }
 }
 
-std::string creditDescriptor::getFieldValueAsString(void *object, int field, int i) const
+std::string exchangeDescriptor::getFieldValueAsString(void *object, int field, int i) const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
     if (basedesc) {
@@ -444,16 +480,18 @@ std::string creditDescriptor::getFieldValueAsString(void *object, int field, int
             return basedesc->getFieldValueAsString(object,field,i);
         field -= basedesc->getFieldCount();
     }
-    credit *pp = (credit *)object; (void)pp;
+    exchange *pp = (exchange *)object; (void)pp;
     switch (field) {
-        case 0: return long2string(pp->getOs());
-        case 1: return long2string(pp->getPort());
-        case 2: return long2string(pp->getVc());
+        case 0: return long2string(pp->getType());
+        case 1: return long2string(pp->getOs());
+        case 2: return long2string(pp->getPort());
+        case 3: return long2string(pp->getVc());
+        case 4: return long2string(pp->getCredit());
         default: return "";
     }
 }
 
-bool creditDescriptor::setFieldValueAsString(void *object, int field, int i, const char *value) const
+bool exchangeDescriptor::setFieldValueAsString(void *object, int field, int i, const char *value) const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
     if (basedesc) {
@@ -461,16 +499,18 @@ bool creditDescriptor::setFieldValueAsString(void *object, int field, int i, con
             return basedesc->setFieldValueAsString(object,field,i,value);
         field -= basedesc->getFieldCount();
     }
-    credit *pp = (credit *)object; (void)pp;
+    exchange *pp = (exchange *)object; (void)pp;
     switch (field) {
-        case 0: pp->setOs(string2long(value)); return true;
-        case 1: pp->setPort(string2long(value)); return true;
-        case 2: pp->setVc(string2long(value)); return true;
+        case 0: pp->setType(string2long(value)); return true;
+        case 1: pp->setOs(string2long(value)); return true;
+        case 2: pp->setPort(string2long(value)); return true;
+        case 3: pp->setVc(string2long(value)); return true;
+        case 4: pp->setCredit(string2long(value)); return true;
         default: return false;
     }
 }
 
-const char *creditDescriptor::getFieldStructName(int field) const
+const char *exchangeDescriptor::getFieldStructName(int field) const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
     if (basedesc) {
@@ -483,7 +523,7 @@ const char *creditDescriptor::getFieldStructName(int field) const
     };
 }
 
-void *creditDescriptor::getFieldStructValuePointer(void *object, int field, int i) const
+void *exchangeDescriptor::getFieldStructValuePointer(void *object, int field, int i) const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
     if (basedesc) {
@@ -491,7 +531,7 @@ void *creditDescriptor::getFieldStructValuePointer(void *object, int field, int 
             return basedesc->getFieldStructValuePointer(object, field, i);
         field -= basedesc->getFieldCount();
     }
-    credit *pp = (credit *)object; (void)pp;
+    exchange *pp = (exchange *)object; (void)pp;
     switch (field) {
         default: return nullptr;
     }

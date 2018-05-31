@@ -6,9 +6,6 @@
 
 using buf = std::deque<flit *>;
 
-int32_t cabinet_remote_credit_counter[48][36][12][V];
-int32_t cabinet_local_credit_counter[48][36][12][V];
-
 LowerNRC::LowerNRC() {}
 
 LowerNRC::~LowerNRC() {
@@ -106,14 +103,14 @@ void LowerNRC::initialize() {
 
   std::fill(sa2_vcid_, sa2_vcid_ + sizeof(sa2_vcid_) / sizeof(int32_t), -1);
 
-  std::fill(cabinet_remote_credit_counter[0][0][0],
-            cabinet_remote_credit_counter[0][0][0] +
-                sizeof(cabinet_remote_credit_counter) / sizeof(int32_t),
+  std::fill(cabinet_remote_credit_counter_[0][0],
+            cabinet_remote_credit_counter_[0][0] +
+                sizeof(cabinet_remote_credit_counter_) / sizeof(int32_t),
             inbuf_capacity);
 
-  std::fill(cabinet_local_credit_counter[0][0][0],
-            cabinet_local_credit_counter[0][0][0] +
-                sizeof(cabinet_local_credit_counter) / sizeof(int32_t),
+  std::fill(cabinet_local_credit_counter_[0][0],
+            cabinet_local_credit_counter_[0][0] +
+                sizeof(cabinet_local_credit_counter_) / sizeof(int32_t),
             inbuf_capacity);
 }
 
@@ -124,6 +121,8 @@ void LowerNRC::handleMessage(omnetpp::cMessage *msg) {
              strcmp(msg->getName(), "credit_lower") == 0 ||
              strcmp(msg->getName(), "credit_upper") == 0) {
     credit_cb(msg);
+  } else if (strcmp(msg->getName(), "exchange") == 0) {
+    exchange_cb(msg);
   } else {
     flit_cb(msg);
   }
@@ -221,9 +220,9 @@ void LowerNRC::route_compute() {
       cdt->setVc(vi);                                                          \
       credit_queue_[pi].push_back(cdt);                                        \
     } else {                                                                   \
-      auto os = getIndex() * P / 2 + P / 2;                                    \
+      auto os = getIndex() * P / 2 + (po - P / 2);                             \
       auto port = get_nrm_id();                                                \
-      ++cabinet_local_credit_counter[get_cabinet_id()][os][port][vi];          \
+      update_credit(local, os, port, vi, 1);                                   \
     }                                                                          \
                                                                                \
     if (channel_is_available(pi) && !credit_queue_[pi].empty()) {              \
@@ -445,8 +444,8 @@ void LowerNRC::upper_port_select_packet() {
     auto ti = po / W;
     auto tj = po % W;
     for (auto v = 0; v < H * V; v++) {
-      auto k = v / H;
-      auto vc = v % H;
+      auto k = v / V;
+      auto vc = v % V;
       buf &buffer = colbuf_[ti][tj][k][vc];
       if (buffer.size() < packet_length)
         continue;
@@ -461,11 +460,10 @@ void LowerNRC::upper_port_select_packet() {
 
         int32_t *credit = nullptr;
         if (next_po < P / 2)
-          credit =
-              &(cabinet_local_credit_counter[cabinet_id][os_id][next_po][vc]);
+          credit = &(cabinet_local_credit_counter_[os_id][next_po][vc]);
         else
-          credit = &(cabinet_remote_credit_counter[cabinet_id][os_id]
-                                                  [next_po - P / 2][vc]);
+          credit =
+              &(cabinet_remote_credit_counter_[os_id][next_po - P / 2][vc]);
         if (*credit < packet_length)
           continue;
 
@@ -473,7 +471,11 @@ void LowerNRC::upper_port_select_packet() {
           continue;
 
         upper_port_forward_packet(po, buffer);
-        *credit -= packet_length;
+
+        if (next_po < P / 2)
+          update_credit(local, os_id, next_po, vc, -packet_length);
+        else
+          update_credit(remote, os_id, next_po - P / 2, vc, -packet_length);
 
         break;
       }
@@ -491,7 +493,7 @@ void LowerNRC::upper_port_forward_packet(int32_t po, buf &buffer) {
     std::cerr << get_log(log_levels::info, std::string("forwarded flit: ") +
                                                f->getName() + " at port " +
                                                std::to_string(po));
-    sendDelayed(f, count * clk_cycle, po_cstr);
+    sendDelayed(f, count * (clk_cycle + margin), po_cstr);
     buffer.pop_front();
   }
 }
@@ -523,7 +525,21 @@ void LowerNRC::credit_cb(omnetpp::cMessage *msg) {
   if (os == -1)
     ++credit_[port][vc];
   else
-    ++cabinet_remote_credit_counter[get_cabinet_id()][os][port][vc];
+    update_credit(remote, os, port, vc, 1);
+}
+
+void LowerNRC::exchange_cb(omnetpp::cMessage *msg) {
+  exchange *exc = omnetpp::check_and_cast<exchange *>(msg);
+  auto os = exc->getOs();
+  auto port = exc->getPort();
+  auto vc = exc->getVc();
+  auto credit = exc->getCredit();
+  if (exc->getType() == local) {
+    cabinet_local_credit_counter_[os][port][vc] = credit;
+  } else {
+    cabinet_remote_credit_counter_[os][port][vc] = credit;
+  }
+  delete exc;
 }
 
 bool LowerNRC::channel_is_available(int32_t port) {
@@ -584,6 +600,17 @@ inline std::string LowerNRC::credit_string(credit *cdt) {
   str += ",vc=";
   str += std::to_string(cdt->getVc());
   return str;
+}
+
+inline void LowerNRC::update_credit(int32_t type, int32_t os, int32_t port,
+                                    int32_t vc, int32_t credit) {
+  exchange *exc = new exchange();
+  exc->setType(type);
+  exc->setOs(os);
+  exc->setPort(port);
+  exc->setVc(vc);
+  exc->setCredit(credit);
+  send(exc, "port_24$o");
 }
 
 void LowerNRC::finish() {}

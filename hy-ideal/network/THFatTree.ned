@@ -534,6 +534,12 @@ network THFatTree
 			datarate = 112Gbps;
 		}
 
+		channel C0 extends ned.DatarateChannel
+		{
+		  delay = 0s;
+			datarate = 0;
+		}
+
 	submodules:
 		nrm[576]: NRM {
 			parameters:

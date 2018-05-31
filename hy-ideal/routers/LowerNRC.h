@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "../credit_m.h"
+#include "../exchange_m.h"
 #include "../flit_m.h"
 #include "../macros.h"
 #include "../sim.h"
@@ -41,6 +42,7 @@ protected:
 
   void flit_cb(omnetpp::cMessage *msg);
   void credit_cb(omnetpp::cMessage *msg);
+  void exchange_cb(omnetpp::cMessage *msg);
 
   bool channel_is_available(int32_t port);
   std::string get_id();
@@ -53,6 +55,9 @@ protected:
   bool is_right_time();
 
   std::string credit_string(credit *cdt);
+
+  void update_credit(int32_t type, int32_t os, int32_t port, int32_t vc,
+                     int32_t credit);
 
 private:
   omnetpp::cMessage *self_timer_ = nullptr;
@@ -70,4 +75,6 @@ private:
   int32_t sa2_vcid_[P / 2];
   int32_t credit_[P / 2][V];
   std::deque<credit *> credit_queue_[P];
+  int32_t cabinet_remote_credit_counter_[36][12][V];
+  int32_t cabinet_local_credit_counter_[36][12][V];
 };

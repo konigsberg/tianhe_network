@@ -145,8 +145,8 @@ flit *Node::flit_factory(bool is_head, bool is_tail, int32_t vcid,
     sprintf(flit_name, "BF%d-%d-to-%d", src_id, flit_id, dest_id);
   }
   flit *f = new flit(flit_name);
-  // f->setByteLength(sizeof_flit);
-  f->setByteLength(0);
+  f->setByteLength(sizeof_flit);
+  // f->setByteLength(0);
   f->setSrc_id(src_id);
   f->setDest_id(dest_id);
   f->setIs_head(is_head);

@@ -6,8 +6,6 @@
 
 using buf = std::deque<flit *>;
 
-int32_t root_remote_credit_counter[36][48][12][V];
-
 UpperNRC::UpperNRC() {}
 
 UpperNRC::~UpperNRC() {
@@ -105,9 +103,9 @@ void UpperNRC::initialize() {
 
   std::fill(sa2_vcid_, sa2_vcid_ + sizeof(sa2_vcid_) / sizeof(int32_t), -1);
 
-  std::fill(root_remote_credit_counter[0][0][0],
-            root_remote_credit_counter[0][0][0] +
-                sizeof(root_remote_credit_counter) / sizeof(int32_t),
+  std::fill(root_remote_credit_counter_[0][0],
+            root_remote_credit_counter_[0][0] +
+                sizeof(root_remote_credit_counter_) / sizeof(int32_t),
             inbuf_capacity);
 }
 
@@ -208,11 +206,12 @@ void UpperNRC::route_compute() {
     if (pi >= P / 2) {                                                         \
       cdt->setOs(-1);                                                          \
       cdt->setPort(get_next_port(pi));                                         \
+      cdt->setVc(vi);                                                          \
     } else {                                                                   \
       cdt->setOs(get_root_id());                                               \
       cdt->setPort(get_nrm_id());                                              \
+      cdt->setVc(vi);                                                          \
     }                                                                          \
-    cdt->setVc(vi);                                                            \
     credit_queue_[pi].push_back(cdt);                                          \
                                                                                \
     if (channel_is_available(pi) && !credit_queue_[pi].empty()) {              \
@@ -438,8 +437,8 @@ void UpperNRC::lower_port_select_packet() {
     auto ti = po / W;
     auto tj = po % W;
     for (auto v = 0; v < H * V; v++) {
-      auto k = v / H;
-      auto vc = v % H;
+      auto k = v / V;
+      auto vc = v % V;
       buf &buffer = colbuf_[ti][tj][k][vc];
       if (buffer.size() < packet_length)
         continue;
@@ -448,12 +447,10 @@ void UpperNRC::lower_port_select_packet() {
       auto next_pi = get_next_port(po);
       auto next_po = f->getNext_port();
       if (is_matched(next_po, get_switched_port(next_pi)) && is_right_time()) {
-        auto root_id = get_root_id();
         auto os_id = getIndex() * P / 2 + po;
         auto vc = f->getVcid();
 
-        auto credit =
-            &(root_remote_credit_counter[root_id][os_id][next_po][vc]);
+        auto credit = &(root_remote_credit_counter_[os_id][next_po][vc]);
         if (*credit < packet_length) {
           continue;
         }
@@ -462,7 +459,8 @@ void UpperNRC::lower_port_select_packet() {
           continue;
 
         lower_port_forward_packet(po, buffer);
-        *credit -= packet_length;
+
+        update_credit(remote, os_id, next_po, vc, -packet_length);
 
         break;
       }
@@ -480,7 +478,7 @@ void UpperNRC::lower_port_forward_packet(int32_t po, buf &buffer) {
     std::cerr << get_log(log_levels::info, std::string("forwarded flit: ") +
                                                f->getName() + " at port " +
                                                std::to_string(po));
-    sendDelayed(f, count * clk_cycle, po_cstr);
+    sendDelayed(f, count * (clk_cycle + margin), po_cstr);
     buffer.pop_front();
   }
 }
@@ -512,7 +510,17 @@ void UpperNRC::credit_cb(omnetpp::cMessage *msg) {
   if (os == -1)
     ++credit_[port][vc];
   else
-    ++root_remote_credit_counter[get_root_id()][os][port][vc];
+    update_credit(remote, os, port, vc, 1);
+}
+
+void UpperNRC::exchange_cb(omnetpp::cMessage *msg) {
+  exchange *exc = omnetpp::check_and_cast<exchange *>(msg);
+  auto os = exc->getOs();
+  auto port = exc->getPort();
+  auto vc = exc->getVc();
+  auto credit = exc->getCredit();
+  root_remote_credit_counter_[os][port][vc] = credit;
+  delete exc;
 }
 
 bool UpperNRC::channel_is_available(int32_t port) {
@@ -573,6 +581,17 @@ inline std::string UpperNRC::credit_string(credit *cdt) {
   str += ",vc=";
   str += std::to_string(cdt->getVc());
   return str;
+}
+
+inline void UpperNRC::update_credit(int32_t type, int32_t os, int32_t port,
+                                    int32_t vc, int32_t credit) {
+  exchange *exc = new exchange();
+  exc->setType(type);
+  exc->setOs(os);
+  exc->setPort(port);
+  exc->setVc(vc);
+  exc->setCredit(credit);
+  send(exc, "port_24$o");
 }
 
 void UpperNRC::finish() {}

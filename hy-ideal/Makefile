@@ -30,11 +30,12 @@ PROJECTRELATIVE_PATH =
 O = $(PROJECT_OUTPUT_DIR)/$(CONFIGNAME)/$(PROJECTRELATIVE_PATH)
 
 # Object files for local .cc, .msg and .sm files
-OBJS = $O/credit_m.o $O/flit_m.o
+OBJS = $O/credit_m.o $O/exchange_m.o $O/flit_m.o
 
 # Message files
 MSGFILES = \
     credit.msg \
+    exchange.msg \
     flit.msg
 
 # SM files
