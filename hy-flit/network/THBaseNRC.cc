@@ -1,6 +1,6 @@
 #include <cstdlib>
 
-#include "../../routers/BaseNRC.h"
+#include "../routers/BaseNRC.h"
 
 class THBaseNRC : public BaseNRC {
 protected:

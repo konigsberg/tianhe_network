@@ -1,4 +1,4 @@
-#include "../../th2/node.h"
+#include "node.h"
 
 class THNode : public Node {
 protected:

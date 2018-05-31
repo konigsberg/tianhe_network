@@ -1,6 +1,6 @@
 #include <cstdlib>
 
-#include "../../routers/LowerNRC.h"
+#include "../routers/LowerNRC.h"
 
 class THLowerNRC : public LowerNRC {
 

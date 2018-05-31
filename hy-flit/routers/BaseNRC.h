@@ -4,10 +4,10 @@
 #include <omnetpp.h>
 #include <string>
 
-#include "../th2/credit_m.h"
-#include "../th2/flit_m.h"
-#include "../th2/macros.h"
-#include "../th2/sim.h"
+#include "../credit_m.h"
+#include "../flit_m.h"
+#include "../macros.h"
+#include "../sim.h"
 
 class BaseNRC : public omnetpp::cSimpleModule {
 public:

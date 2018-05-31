@@ -1,6 +1,6 @@
 #include <cstdlib>
 
-#include "../../routers/UpperNRC.h"
+#include "../routers/UpperNRC.h"
 
 class THUpperNRC : public UpperNRC {
 

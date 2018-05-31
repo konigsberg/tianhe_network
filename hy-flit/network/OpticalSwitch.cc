@@ -2,8 +2,8 @@
 #include <cstdint>
 #include <omnetpp.h>
 
-#include "../../th2/flit_m.h"
-#include "../../th2/sim.h"
+#include "../flit_m.h"
+#include "../sim.h"
 
 class OpticalSwitch : public omnetpp::cSimpleModule {
 public:
@@ -20,8 +20,6 @@ protected:
                                                std::to_string(p));
 
     auto switched_port = get_switched_port(p);
-    // std::cerr << "next port in flit is " << f->getNext_port()
-    // << ", switched port now is " << switched_port << std::endl;
     assert(is_matched(f->getNext_port(), switched_port));
     assert(get_channel_available_time(switched_port) <= omnetpp::simTime());
     f->setHop_count(f->getHop_count() + 1);

@@ -3,9 +3,9 @@
 #include <deque>
 #include <omnetpp.h>
 
-#include "flit_m.h"
-#include "macros.h"
-#include "sim.h"
+#include "../flit_m.h"
+#include "../macros.h"
+#include "../sim.h"
 
 class Node : public omnetpp::cSimpleModule {
 public:
