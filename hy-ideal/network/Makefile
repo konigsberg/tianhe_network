@@ -1,12 +1,12 @@
 #
-# OMNeT++/OMNEST Makefile for hy-ideal
+# OMNeT++/OMNEST Makefile for network
 #
 # This file was generated with the command:
 #  opp_makemake
 #
 
 # Name of target to be created (-o option)
-TARGET = hy-ideal$(D)$(EXE_SUFFIX)
+TARGET = network$(D)$(EXE_SUFFIX)
 TARGET_DIR = .
 
 # User interface (uncomment one) (-u option)
@@ -30,12 +30,18 @@ PROJECTRELATIVE_PATH =
 O = $(PROJECT_OUTPUT_DIR)/$(CONFIGNAME)/$(PROJECTRELATIVE_PATH)
 
 # Object files for local .cc, .msg and .sm files
-OBJS = $O/credit_m.o $O/flit_m.o
+OBJS = \
+    $O/node.o \
+    $O/OpticalSwitch.o \
+    $O/THBaseNRC.o \
+    $O/THLowerNRC.o \
+    $O/THNode.o \
+    $O/THUpperNRC.o \
+    ../out/gcc-debug/*.o \
+    ../routers/out/gcc-debug/*.o
 
 # Message files
-MSGFILES = \
-    credit.msg \
-    flit.msg
+MSGFILES =
 
 # SM files
 SMFILES =

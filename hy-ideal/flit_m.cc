@@ -1,5 +1,5 @@
 //
-// Generated file, do not edit! Created by nedtool 5.3 from flit.msg.
+// Generated file, do not edit! Created by nedtool 5.2 from flit.msg.
 //
 
 // Disable warnings about unused variables, empty switch stmts, etc:
