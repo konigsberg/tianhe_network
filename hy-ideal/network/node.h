@@ -32,6 +32,8 @@ protected:
   std::string get_id();
   std::string get_log(log_levels level, const std::string &msg);
 
+  std::string credit_string(credit *cdt);
+
   virtual int32_t get_next_port() = 0;
   virtual int32_t get_node_num() = 0;
 

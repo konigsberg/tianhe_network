@@ -42,6 +42,8 @@ protected:
   std::string get_id();
   std::string get_log(log_levels level, const std::string &msg);
 
+  std::string credit_string(credit *cdt);
+
 private:
   omnetpp::cMessage *self_timer_ = nullptr;
   std::deque<flit *> inbuf_[P][V];

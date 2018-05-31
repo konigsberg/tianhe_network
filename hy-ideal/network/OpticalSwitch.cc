@@ -46,7 +46,7 @@ protected:
 
   void credit_cb(omnetpp::cMessage *msg) {
     credit *cdt = omnetpp::check_and_cast<credit *>(msg);
-    if (strcmp(cdt->getName(), "credit_lower")) {
+    if (strcmp(cdt->getName(), "credit_lower") == 0) {
       for (auto po = P / 2; po < P; po++)
         if (channel_is_available(po)) {
           char po_cstr[20];
@@ -56,7 +56,7 @@ protected:
         }
     }
 
-    if (strcmp(cdt->getName(), "credit_upper")) {
+    if (strcmp(cdt->getName(), "credit_upper") == 0) {
       for (auto po = 0; po < P / 2; po++)
         if (channel_is_available(po)) {
           char po_cstr[20];

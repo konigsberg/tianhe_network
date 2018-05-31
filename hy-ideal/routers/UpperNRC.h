@@ -52,6 +52,8 @@ protected:
   bool is_matched(int32_t request_po, int32_t switched_po);
   bool is_right_time();
 
+  std::string credit_string(credit *cdt);
+
 private:
   omnetpp::cMessage *self_timer_ = nullptr;
   std::deque<flit *> inbuf_[P][V];

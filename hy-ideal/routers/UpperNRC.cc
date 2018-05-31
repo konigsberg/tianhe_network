@@ -221,6 +221,8 @@ void UpperNRC::route_compute() {
       sprintf(pi_cstr, "port_%d$o", pi);                                       \
       send(cdt, pi_cstr);                                                      \
       credit_queue_[pi].pop_front();                                           \
+      std::cerr << get_log(log_levels::debug,                                  \
+                           "sending new credit " + credit_string(cdt));        \
     }                                                                          \
   }
 
@@ -500,9 +502,12 @@ void UpperNRC::flit_cb(omnetpp::cMessage *msg) {
 
 void UpperNRC::credit_cb(omnetpp::cMessage *msg) {
   credit *cdt = omnetpp::check_and_cast<credit *>(msg);
+  std::cerr << get_log(log_levels::debug,
+                       "receiving credit " + credit_string(cdt));
   auto os = cdt->getOs();
   auto port = cdt->getPort();
   auto vc = cdt->getVc();
+  delete cdt;
 
   if (os == -1)
     ++credit_[port][vc];
@@ -558,6 +563,16 @@ inline bool UpperNRC::is_matched(int32_t request_po, int32_t switched_po) {
 
 inline bool UpperNRC::is_right_time() {
   return uint64_t(omnetpp::simTime().dbl() / clk_cycle) % window == 0;
+}
+
+inline std::string UpperNRC::credit_string(credit *cdt) {
+  std::string str("os=");
+  str += std::to_string(cdt->getOs());
+  str += ",port=";
+  str += std::to_string(cdt->getPort());
+  str += ",vc=";
+  str += std::to_string(cdt->getVc());
+  return str;
 }
 
 void UpperNRC::finish() {}

@@ -187,6 +187,8 @@ void BaseNRC::route_compute() {
       sprintf(pi_cstr, "port_%d$o", pi);                                       \
       send(cdt, pi_cstr);                                                      \
       credit_queue_[pi].pop_front();                                           \
+      std::cerr << get_log(log_levels::debug,                                  \
+                           "sending new credit " + credit_string(cdt));        \
     }                                                                          \
   }
 
@@ -413,6 +415,8 @@ void BaseNRC::flit_cb(omnetpp::cMessage *msg) {
 
 void BaseNRC::credit_cb(omnetpp::cMessage *msg) {
   credit *cdt = omnetpp::check_and_cast<credit *>(msg);
+  std::cerr << get_log(log_levels::debug,
+                       "receiving credit " + credit_string(cdt));
   auto port = cdt->getPort();
   auto vc = cdt->getVc();
   ++credit_[port][vc];
@@ -456,6 +460,16 @@ std::string BaseNRC::get_log(log_levels level, const std::string &msg) {
                         "ns in " + get_id() + ", ";
   log_msg += msg + '\n';
   return log_msg;
+}
+
+inline std::string BaseNRC::credit_string(credit *cdt) {
+  std::string str("os=");
+  str += std::to_string(cdt->getOs());
+  str += ",port=";
+  str += std::to_string(cdt->getPort());
+  str += ",vc=";
+  str += std::to_string(cdt->getVc());
+  return str;
 }
 
 void BaseNRC::finish() {}
