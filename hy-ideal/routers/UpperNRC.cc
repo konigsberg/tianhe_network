@@ -114,7 +114,9 @@ void UpperNRC::initialize() {
 void UpperNRC::handleMessage(omnetpp::cMessage *msg) {
   if (msg->isSelfMessage()) {
     timer_cb();
-  } else if (strcmp(msg->getName(), "credit") == 0) {
+  } else if (strcmp(msg->getName(), "credit") == 0 ||
+             strcmp(msg->getName(), "credit_lower") == 0 ||
+             strcmp(msg->getName(), "credit_upper") == 0) {
     credit_cb(msg);
   } else {
     flit_cb(msg);
@@ -201,7 +203,7 @@ void UpperNRC::route_compute() {
                                                                                \
     source.pop_front();                                                        \
                                                                                \
-    auto cdt = new credit();                                                   \
+    auto cdt = new credit("credit_upper");                                     \
                                                                                \
     if (pi >= P / 2) {                                                         \
       cdt->setOs(-1);                                                          \
@@ -488,7 +490,7 @@ void UpperNRC::flit_cb(omnetpp::cMessage *msg) {
   if (inbuf_[p][v].size() > inbuf_capacity)
     std::cerr << get_log(log_levels::critical,
                          "router " + get_id() + " input buffer overflow");
-  assert(inbuf_[p][v].size() <= inbuf_capacity);
+  // assert(inbuf_[p][v].size() <= inbuf_capacity);
 
   inbuf_[p][v].push_back(f);
   std::cerr << get_log(log_levels::info, std::string("received flit ") +

@@ -1,7 +1,9 @@
 #include <cassert>
 #include <cstdint>
+#include <cstdio>
 #include <omnetpp.h>
 
+#include "../credit_m.h"
 #include "../flit_m.h"
 #include "../sim.h"
 
@@ -12,7 +14,14 @@ public:
 
 protected:
   void handleMessage(omnetpp::cMessage *msg) {
+    if (strcmp(msg->getName(), "credit_upper") == 0 ||
+        strcmp(msg->getName(), "credit_lower") == 0)
+      credit_cb(msg);
+    else
+      flit_cb(msg);
+  }
 
+  void flit_cb(omnetpp::cMessage *msg) {
     flit *f = omnetpp::check_and_cast<flit *>(msg);
     auto p = f->getPort();
     std::cerr << get_log(log_levels::info, std::string("received flit: ") +
@@ -20,10 +29,8 @@ protected:
                                                std::to_string(p));
 
     auto switched_port = get_switched_port(p);
-    // std::cerr << "next port in flit is " << f->getNext_port()
-    // << ", switched port now is " << switched_port << std::endl;
     assert(is_matched(f->getNext_port(), switched_port));
-    assert(get_channel_available_time(switched_port) <= omnetpp::simTime());
+    assert(channel_is_available(switched_port));
     f->setHop_count(f->getHop_count() + 1);
 
     auto next_pi = get_next_port(switched_port);
@@ -37,12 +44,38 @@ protected:
                                                std::to_string(switched_port));
   }
 
-  omnetpp::simtime_t get_channel_available_time(int32_t port) {
+  void credit_cb(omnetpp::cMessage *msg) {
+    credit *cdt = omnetpp::check_and_cast<credit *>(msg);
+    if (strcmp(cdt->getName(), "credit_lower")) {
+      for (auto po = P / 2; po < P; po++)
+        if (channel_is_available(po)) {
+          char po_cstr[20];
+          sprintf(po_cstr, "port_%d$o", po);
+          send(cdt, po_cstr);
+          return;
+        }
+    }
+
+    if (strcmp(cdt->getName(), "credit_upper")) {
+      for (auto po = 0; po < P / 2; po++)
+        if (channel_is_available(po)) {
+          char po_cstr[20];
+          sprintf(po_cstr, "port_%d$o", po);
+          send(cdt, po_cstr);
+          return;
+        }
+    }
+
+    std::cerr << "invalid credit received" << std::endl;
+    assert(false);
+  }
+
+  bool channel_is_available(int32_t port) {
     char poCstr[20];
     sprintf(poCstr, "port_%d$o", port);
     omnetpp::cChannel *channel = gate(poCstr)->getTransmissionChannel();
     omnetpp::simtime_t finishTime = channel->getTransmissionFinishTime();
-    return finishTime;
+    return finishTime <= omnetpp::simTime();
   }
 
   int32_t get_switched_port(int32_t in_port) {
