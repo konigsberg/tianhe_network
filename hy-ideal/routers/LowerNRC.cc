@@ -222,6 +222,7 @@ void LowerNRC::route_compute() {
     } else {                                                                   \
       auto os = getIndex() * P / 2 + (po - P / 2);                             \
       auto port = get_nrm_id();                                                \
+      cabinet_local_credit_counter_[os][port][vi] += 1;                        \
       update_credit(local, os, port, vi, 1);                                   \
     }                                                                          \
                                                                                \
@@ -454,7 +455,6 @@ void LowerNRC::upper_port_select_packet() {
       auto next_pi = get_next_port(po);
       auto next_po = f->getNext_port();
       if (is_matched(next_po, get_switched_port(next_pi)) && is_right_time()) {
-        auto cabinet_id = get_cabinet_id();
         auto os_id = getIndex() * P / 2 + (po - P / 2);
         auto vc = f->getVcid();
 
@@ -472,10 +472,14 @@ void LowerNRC::upper_port_select_packet() {
 
         upper_port_forward_packet(po, buffer);
 
-        if (next_po < P / 2)
+        if (next_po < P / 2) {
+          cabinet_local_credit_counter_[os_id][next_po][vc] -= packet_length;
           update_credit(local, os_id, next_po, vc, -packet_length);
-        else
+        } else {
+          cabinet_remote_credit_counter_[os_id][next_po - P / 2][vc] -=
+              packet_length;
           update_credit(remote, os_id, next_po - P / 2, vc, -packet_length);
+        }
 
         break;
       }
@@ -524,8 +528,10 @@ void LowerNRC::credit_cb(omnetpp::cMessage *msg) {
 
   if (os == -1)
     ++credit_[port][vc];
-  else
+  else {
+    cabinet_remote_credit_counter_[os][port][vc] += 1;
     update_credit(remote, os, port, vc, 1);
+  }
 }
 
 void LowerNRC::exchange_cb(omnetpp::cMessage *msg) {

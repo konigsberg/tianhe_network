@@ -460,6 +460,7 @@ void UpperNRC::lower_port_select_packet() {
 
         lower_port_forward_packet(po, buffer);
 
+        root_remote_credit_counter_[os_id][next_po][vc] -= packet_length;
         update_credit(remote, os_id, next_po, vc, -packet_length);
 
         break;
@@ -509,8 +510,10 @@ void UpperNRC::credit_cb(omnetpp::cMessage *msg) {
 
   if (os == -1)
     ++credit_[port][vc];
-  else
+  else {
+    root_remote_credit_counter_[os][port][vc] += 1;
     update_credit(remote, os, port, vc, 1);
+  }
 }
 
 void UpperNRC::exchange_cb(omnetpp::cMessage *msg) {

@@ -1,3 +1,9 @@
+#include <cstdint>
+#include <omnetpp.h>
+
+#include "../exchange_m.h"
+#include "../macros.h"
+
 class CabinetCounter : public omnetpp::cSimpleModule {
 public:
   CabinetCounter(){};
@@ -31,7 +37,7 @@ protected:
 
   void broadcast(int32_t type, int32_t os, int32_t port, int32_t vc,
                  int32_t credit) {
-    for (auto po = 0; po < 12 * 3 * 12; po++) {
+    for (auto po = 0; po < 36; po++) {
       exchange *exc = new exchange("exchange");
       exc->setType(type);
       exc->setOs(os);
@@ -47,3 +53,5 @@ protected:
   int32_t remote_[36][12][V];
   int32_t local_[36][12][V];
 };
+
+Define_Module(CabinetCounter);
