@@ -55,6 +55,7 @@ protected:
   bool is_right_time();
 
   std::string credit_string(credit *cdt);
+  std::string exchange_string(exchange *exc);
 
   void update_credit(int32_t type, int32_t os, int32_t port, int32_t vc,
                      int32_t credit);
@@ -77,4 +78,5 @@ private:
   std::deque<credit *> credit_queue_[P];
   int32_t cabinet_remote_credit_counter_[36][12][V];
   int32_t cabinet_local_credit_counter_[36][12][V];
+  uint64_t clock_ = 0;
 };

@@ -55,11 +55,11 @@ protected:
   bool is_right_time();
 
   std::string credit_string(credit *cdt);
+  std::string exchange_string(exchange *exc);
 
   void update_credit(int32_t type, int32_t os, int32_t port, int32_t vc,
                      int32_t credit);
 
-private:
   omnetpp::cMessage *self_timer_ = nullptr;
   std::deque<flit *> inbuf_[P][V];
   int32_t routing_result_[P][V];
@@ -76,4 +76,5 @@ private:
   int32_t credit_[P][V]; // FIXME
   std::deque<credit *> credit_queue_[P];
   int32_t root_remote_credit_counter_[48][12][V];
+  uint64_t clock_ = 0;
 };

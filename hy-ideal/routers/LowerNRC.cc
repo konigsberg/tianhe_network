@@ -22,7 +22,7 @@ LowerNRC::~LowerNRC() {
       }
     }
   }
-  recordScalar("inbuf_flits", inbuf_flits);
+  recordScalar("inbuf_flits_left", inbuf_flits);
 
   // clear swtbuf
   auto swtbuf_flits = 0;
@@ -36,7 +36,7 @@ LowerNRC::~LowerNRC() {
               swtbuf_[i][j][k][b][v].pop_front();
               swtbuf_flits++;
             }
-  recordScalar("swtbuf_flits", swtbuf_flits);
+  recordScalar("swtbuf_flits_left", swtbuf_flits);
 
   // clearing free_msg_queue and forward_queue is unnecessary.
   // pipeline is removed. free_msg is integrated into flit.
@@ -52,7 +52,7 @@ LowerNRC::~LowerNRC() {
             colbuf_[i][j][k][v].pop_front();
             colbuf_flits++;
           }
-  recordScalar("colbuf_flits", colbuf_flits);
+  recordScalar("colbuf_flits_left", colbuf_flits);
 
   // clear credit_queue
   auto credits = 0;
@@ -63,10 +63,11 @@ LowerNRC::~LowerNRC() {
       ++credits;
     }
   }
-  recordScalar("credits", credits);
+  recordScalar("credits_unsent", credits);
 }
 
 void LowerNRC::initialize() {
+  clock_ = 0;
   self_timer_ = new omnetpp::cMessage("self_timer");
   scheduleAt(sim_start_time, self_timer_);
 
@@ -129,6 +130,8 @@ void LowerNRC::handleMessage(omnetpp::cMessage *msg) {
 }
 
 void LowerNRC::timer_cb() {
+  ++clock_;
+  // std::cerr << "in lowerNRC, clock is " << clock_ << std::endl;
   scheduleAt(omnetpp::simTime() + clk_cycle, self_timer_);
   route_compute();
   row_move();
@@ -176,11 +179,9 @@ void LowerNRC::timer_cb() {
   }
 
 void LowerNRC::route_compute() {
-  for (auto pi = 0; pi < P; pi++) {
-    for (auto vi = 0; vi < V; vi++) {
+  for (auto pi = 0; pi < P; pi++)
+    for (auto vi = 0; vi < V; vi++)
       ROUTE_COMPUTE_FOR_FLIT(pi, vi);
-    }
-  }
 }
 
 #define ROW_MOVE_FOR_BUF(pi, vi)                                               \
@@ -207,33 +208,37 @@ void LowerNRC::route_compute() {
     target.push_back(f);                                                       \
     source.pop_front();                                                        \
                                                                                \
-    auto cdt = new credit("credit_lower");                                     \
+    {                                                                          \
+      auto cdt = new credit("credit_lower");                                   \
                                                                                \
-    if (pi < P / 2) {                                                          \
-      cdt->setOs(-1);                                                          \
-      cdt->setPort(get_next_port(pi));                                         \
-      cdt->setVc(vi);                                                          \
-      credit_queue_[pi].push_back(cdt);                                        \
-    } else if (vi < V / 2) {                                                   \
-      cdt->setOs(get_cabinet_id());                                            \
-      cdt->setPort(get_nrm_id());                                              \
-      cdt->setVc(vi);                                                          \
-      credit_queue_[pi].push_back(cdt);                                        \
-    } else {                                                                   \
-      auto os = getIndex() * P / 2 + (po - P / 2);                             \
-      auto port = get_nrm_id();                                                \
-      cabinet_local_credit_counter_[os][port][vi] += 1;                        \
-      update_credit(local, os, port, vi, 1);                                   \
+      if (pi < P / 2) {                                                        \
+        cdt->setOs(-1);                                                        \
+        cdt->setPort(get_next_port(pi));                                       \
+        cdt->setVc(vi);                                                        \
+        credit_queue_[pi].push_back(cdt);                                      \
+      } else if (vi < V / 2) {                                                 \
+        cdt->setOs(get_cabinet_id());                                          \
+        cdt->setPort(get_nrm_id());                                            \
+        cdt->setVc(vi);                                                        \
+        credit_queue_[pi].push_back(cdt);                                      \
+      } else {                                                                 \
+        /* which upper port in NRM */                                          \
+        auto os = getIndex() * P / 2 + (po - P / 2);                           \
+        auto port = get_nrm_id();                                              \
+        cabinet_local_credit_counter_[os][port][vi] += 1;                      \
+        update_credit(local, os, port, vi, 1);                                 \
+      }                                                                        \
     }                                                                          \
                                                                                \
     if (channel_is_available(pi) && !credit_queue_[pi].empty()) {              \
-      cdt = credit_queue_[pi].front();                                         \
+      auto cdt = credit_queue_[pi].front();                                    \
       char pi_cstr[20];                                                        \
       sprintf(pi_cstr, "port_%d$o", pi);                                       \
       send(cdt, pi_cstr);                                                      \
       credit_queue_[pi].pop_front();                                           \
-      std::cerr << get_log(log_levels::debug,                                  \
-                           "sending new credit " + credit_string(cdt));        \
+      std::cerr << get_log(log_levels::info,                                   \
+                           "sending credit message " + credit_string(cdt) +    \
+                               " at port " + std::to_string(pi));              \
     }                                                                          \
   }
 
@@ -454,7 +459,10 @@ void LowerNRC::upper_port_select_packet() {
       flit *f = buffer.front();
       auto next_pi = get_next_port(po);
       auto next_po = f->getNext_port();
-      if (is_matched(next_po, get_switched_port(next_pi)) && is_right_time()) {
+
+      auto switched_po = get_switched_port(next_pi);
+
+      if (is_matched(next_po, switched_po) && is_right_time()) {
         auto os_id = getIndex() * P / 2 + (po - P / 2);
         auto vc = f->getVcid();
 
@@ -464,11 +472,21 @@ void LowerNRC::upper_port_select_packet() {
         else
           credit =
               &(cabinet_remote_credit_counter_[os_id][next_po - P / 2][vc]);
-        if (*credit < packet_length)
+        if (*credit < packet_length) {
+          std::cerr << get_log(log_levels::debug,
+                               "cannot forward packet because downstream inbuf "
+                               "is full at port " +
+                                   std::to_string(po));
           continue;
+        }
 
-        if (!channel_is_available(po))
+        if (!channel_is_available(po)) {
+          std::cerr << get_log(
+              log_levels::debug,
+              "cannot forward packet because channel is unavailable at port " +
+                  std::to_string(po));
           continue;
+        }
 
         upper_port_forward_packet(po, buffer);
 
@@ -482,6 +500,12 @@ void LowerNRC::upper_port_select_packet() {
         }
 
         break;
+      } else {
+        std::cerr << get_log(
+            log_levels::debug,
+            "cannot forward packet to optical switch, switched po is " +
+                std::to_string(switched_po) + ", requested po is " +
+                std::to_string(next_po));
       }
     }
   }
@@ -497,7 +521,8 @@ void LowerNRC::upper_port_forward_packet(int32_t po, buf &buffer) {
     std::cerr << get_log(log_levels::info, std::string("forwarded flit: ") +
                                                f->getName() + " at port " +
                                                std::to_string(po));
-    sendDelayed(f, count * (clk_cycle + margin), po_cstr);
+    sendDelayed(f, count * clk_cycle, po_cstr);
+    // sendDelayed(f, count * (clk_cycle + margin), po_cstr);
     buffer.pop_front();
   }
 }
@@ -536,6 +561,8 @@ void LowerNRC::credit_cb(omnetpp::cMessage *msg) {
 
 void LowerNRC::exchange_cb(omnetpp::cMessage *msg) {
   exchange *exc = omnetpp::check_and_cast<exchange *>(msg);
+  std::cerr << get_log(log_levels::debug,
+                       "receiving exchange message " + exchange_string(exc));
   auto os = exc->getOs();
   auto port = exc->getPort();
   auto vc = exc->getVc();
@@ -574,8 +601,7 @@ std::string LowerNRC::get_log(log_levels level, const std::string &msg) {
 }
 
 inline int32_t LowerNRC::get_switched_port(int32_t in_port) {
-  auto clk = uint64_t(omnetpp::simTime().dbl() / period);
-  return (clk % 24 + in_port) % 24;
+  return ((clock_ / window) % 24 + in_port) % 24;
 }
 
 inline int32_t LowerNRC::get_cabinet_id() {
@@ -594,9 +620,7 @@ inline bool LowerNRC::is_matched(int32_t request_po, int32_t switched_po) {
   return false;
 }
 
-inline bool LowerNRC::is_right_time() {
-  return uint64_t(omnetpp::simTime().dbl() / clk_cycle) % window == 0;
-}
+inline bool LowerNRC::is_right_time() { return clock_ % window == 0; }
 
 inline std::string LowerNRC::credit_string(credit *cdt) {
   std::string str("os=");
@@ -608,15 +632,29 @@ inline std::string LowerNRC::credit_string(credit *cdt) {
   return str;
 }
 
+inline std::string LowerNRC::exchange_string(exchange *exc) {
+  std::string str("os=");
+  str += std::to_string(exc->getOs());
+  str += ",port=";
+  str += std::to_string(exc->getPort());
+  str += ",vc=";
+  str += std::to_string(exc->getVc());
+  str += ",credit=";
+  str += std::to_string(exc->getCredit());
+  return str;
+}
+
 inline void LowerNRC::update_credit(int32_t type, int32_t os, int32_t port,
                                     int32_t vc, int32_t credit) {
-  exchange *exc = new exchange();
+  exchange *exc = new exchange("exchange");
   exc->setType(type);
   exc->setOs(os);
   exc->setPort(port);
   exc->setVc(vc);
   exc->setCredit(credit);
   send(exc, "port_24$o");
+  std::cerr << get_log(log_levels::debug,
+                       "sending exchange message " + exchange_string(exc));
 }
 
 void LowerNRC::finish() {}

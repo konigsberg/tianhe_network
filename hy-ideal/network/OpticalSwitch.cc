@@ -13,9 +13,24 @@ public:
   ~OpticalSwitch(){};
 
 protected:
+  uint64_t clock_ = 0;
+  omnetpp::cMessage *self_timer_ = nullptr;
+
+  void initialize() {
+    clock_ = 0;
+    self_timer_ = new omnetpp::cMessage("self_timer");
+    scheduleAt(sim_start_time, self_timer_);
+  }
+
   void handleMessage(omnetpp::cMessage *msg) {
-    if (strcmp(msg->getName(), "credit_upper") == 0 ||
-        strcmp(msg->getName(), "credit_lower") == 0)
+    if (msg->isSelfMessage()) {
+      ++clock_;
+      // std::cerr << "in optical switch, clock is " << clock_ << std::endl;
+      scheduleAt(omnetpp::simTime() + clk_cycle, self_timer_);
+    }
+
+    else if (strcmp(msg->getName(), "credit_upper") == 0 ||
+             strcmp(msg->getName(), "credit_lower") == 0)
       credit_cb(msg);
     else
       flit_cb(msg);
@@ -29,6 +44,13 @@ protected:
                                                std::to_string(p));
 
     auto switched_port = get_switched_port(p);
+    auto next_port = f->getNext_port();
+
+    if (!is_matched(next_port, switched_port)) {
+      std::cerr << "unmatched port, po is " << next_port << ", pi is " << p
+                << ", ps is " << switched_port << std::endl;
+    }
+
     assert(is_matched(f->getNext_port(), switched_port));
     assert(channel_is_available(switched_port));
     f->setHop_count(f->getHop_count() + 1);
@@ -66,8 +88,9 @@ protected:
         }
     }
 
-    std::cerr << "invalid credit received" << std::endl;
-    assert(false);
+    std::string info("invalid credit or cannot forward ");
+    std::cerr << info + cdt->getName() << std::endl;
+    // assert(false);
   }
 
   bool channel_is_available(int32_t port) {
@@ -79,8 +102,7 @@ protected:
   }
 
   int32_t get_switched_port(int32_t in_port) {
-    auto clk = uint64_t(omnetpp::simTime().dbl() / period);
-    return (clk % 24 + in_port) % 24;
+    return ((clock_ / window) % 24 + in_port) % 24;
   }
 
   std::string get_id() {

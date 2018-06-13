@@ -44,7 +44,7 @@ protected:
     }
   }
 
-  int32_t remote_[36][12][V];
+  int32_t remote_[48][12][V];
 };
 
 Define_Module(RootCounter);

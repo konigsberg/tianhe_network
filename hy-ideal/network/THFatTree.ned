@@ -316,7 +316,7 @@ module NRM
         channel C extends ned.DatarateChannel {
             // delay = 5ns;
 						delay = 0ns;
-            datarate = 112Gbps;
+            datarate = 280Gbps;
         }
 
 
@@ -513,7 +513,7 @@ module Root
         channel C extends ned.DatarateChannel {
             //delay = 5ns;
 			delay = 0ns;
-            datarate = 112Gbps;
+            datarate = 280Gbps;
         }
 
     submodules:
@@ -643,19 +643,19 @@ network THFatTree
 		channel C1 extends ned.DatarateChannel
 		{
 			delay = 0ns;
-			datarate = 112Gbps;
+			datarate = 280Gbps;
 		}
 
 		channel C2 extends ned.DatarateChannel
 		{
 			delay = 0ns;
-			datarate = 112Gbps;
+			datarate = 280Gbps;
 		}
 
 		channel C3 extends ned.DatarateChannel
 		{
 			delay = 0ns;
-			datarate = 112Gbps;
+			datarate = 280Gbps;
 		}
 
 		channel C0 extends ned.DatarateChannel

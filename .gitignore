@@ -3,3 +3,5 @@ out/
 !.gitignore
 result/
 *dbg
+sync.sh
+*.gz

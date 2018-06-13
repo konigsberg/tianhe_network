@@ -44,7 +44,6 @@ protected:
 
   std::string credit_string(credit *cdt);
 
-private:
   omnetpp::cMessage *self_timer_ = nullptr;
   std::deque<flit *> inbuf_[P][V];
   int32_t routing_result_[P][V];

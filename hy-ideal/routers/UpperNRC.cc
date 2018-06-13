@@ -67,6 +67,7 @@ UpperNRC::~UpperNRC() {
 }
 
 void UpperNRC::initialize() {
+  clock_ = 0;
   self_timer_ = new omnetpp::cMessage("self_timer");
   scheduleAt(sim_start_time, self_timer_);
 
@@ -116,12 +117,16 @@ void UpperNRC::handleMessage(omnetpp::cMessage *msg) {
              strcmp(msg->getName(), "credit_lower") == 0 ||
              strcmp(msg->getName(), "credit_upper") == 0) {
     credit_cb(msg);
+  } else if (strcmp(msg->getName(), "exchange") == 0) {
+    exchange_cb(msg);
   } else {
     flit_cb(msg);
   }
 }
 
 void UpperNRC::timer_cb() {
+  ++clock_;
+  // std::cerr << "in upperNRC, clock is " << clock_ << std::endl;
   scheduleAt(omnetpp::simTime() + clk_cycle, self_timer_);
   route_compute();
   row_move();
@@ -201,27 +206,29 @@ void UpperNRC::route_compute() {
                                                                                \
     source.pop_front();                                                        \
                                                                                \
-    auto cdt = new credit("credit_upper");                                     \
+    {                                                                          \
+      auto cdt = new credit("credit_upper");                                   \
                                                                                \
-    if (pi >= P / 2) {                                                         \
-      cdt->setOs(-1);                                                          \
-      cdt->setPort(get_next_port(pi));                                         \
-      cdt->setVc(vi);                                                          \
-    } else {                                                                   \
-      cdt->setOs(get_root_id());                                               \
-      cdt->setPort(get_nrm_id());                                              \
-      cdt->setVc(vi);                                                          \
+      if (pi >= P / 2) {                                                       \
+        cdt->setOs(-1);                                                        \
+        cdt->setPort(get_next_port(pi));                                       \
+        cdt->setVc(vi);                                                        \
+      } else {                                                                 \
+        cdt->setOs(get_root_id());                                             \
+        cdt->setPort(get_nrm_id());                                            \
+        cdt->setVc(vi);                                                        \
+      }                                                                        \
+      credit_queue_[pi].push_back(cdt);                                        \
     }                                                                          \
-    credit_queue_[pi].push_back(cdt);                                          \
                                                                                \
     if (channel_is_available(pi) && !credit_queue_[pi].empty()) {              \
-      cdt = credit_queue_[pi].front();                                         \
+      auto cdt = credit_queue_[pi].front();                                    \
       char pi_cstr[20];                                                        \
       sprintf(pi_cstr, "port_%d$o", pi);                                       \
       send(cdt, pi_cstr);                                                      \
       credit_queue_[pi].pop_front();                                           \
-      std::cerr << get_log(log_levels::debug,                                  \
-                           "sending new credit " + credit_string(cdt));        \
+      std::cerr << get_log(log_levels::info,                                   \
+                           "sending credit message " + credit_string(cdt));    \
     }                                                                          \
   }
 
@@ -446,17 +453,29 @@ void UpperNRC::lower_port_select_packet() {
       flit *f = buffer.front();
       auto next_pi = get_next_port(po);
       auto next_po = f->getNext_port();
-      if (is_matched(next_po, get_switched_port(next_pi)) && is_right_time()) {
+
+      auto switched_po = get_switched_port(next_pi);
+
+      if (is_matched(next_po, switched_po) && is_right_time()) {
         auto os_id = getIndex() * P / 2 + po;
         auto vc = f->getVcid();
 
         auto credit = &(root_remote_credit_counter_[os_id][next_po][vc]);
         if (*credit < packet_length) {
+          std::cerr << get_log(log_levels::debug,
+                               "cannot forward packet because downstream inbuf "
+                               "is full at port " +
+                                   std::to_string(po));
           continue;
         }
 
-        if (channel_is_available(po))
+        if (!channel_is_available(po)) {
+          std::cerr << get_log(
+              log_levels::debug,
+              "cannot forward packet because channel is unavailable at port " +
+                  std::to_string(po));
           continue;
+        }
 
         lower_port_forward_packet(po, buffer);
 
@@ -464,6 +483,12 @@ void UpperNRC::lower_port_select_packet() {
         update_credit(remote, os_id, next_po, vc, -packet_length);
 
         break;
+      } else {
+        std::cerr << get_log(
+            log_levels::debug,
+            "cannot forward packet to optical switch, switched po is " +
+                std::to_string(switched_po) + ", requested po is " +
+                std::to_string(next_po));
       }
     }
   }
@@ -479,7 +504,8 @@ void UpperNRC::lower_port_forward_packet(int32_t po, buf &buffer) {
     std::cerr << get_log(log_levels::info, std::string("forwarded flit: ") +
                                                f->getName() + " at port " +
                                                std::to_string(po));
-    sendDelayed(f, count * (clk_cycle + margin), po_cstr);
+    sendDelayed(f, count * clk_cycle, po_cstr);
+    // sendDelayed(f, count * (clk_cycle + margin), po_cstr);
     buffer.pop_front();
   }
 }
@@ -518,6 +544,8 @@ void UpperNRC::credit_cb(omnetpp::cMessage *msg) {
 
 void UpperNRC::exchange_cb(omnetpp::cMessage *msg) {
   exchange *exc = omnetpp::check_and_cast<exchange *>(msg);
+  std::cerr << get_log(log_levels::debug,
+                       "receiving exchange message " + exchange_string(exc));
   auto os = exc->getOs();
   auto port = exc->getPort();
   auto vc = exc->getVc();
@@ -552,8 +580,7 @@ std::string UpperNRC::get_log(log_levels level, const std::string &msg) {
 }
 
 inline int32_t UpperNRC::get_switched_port(int32_t in_port) {
-  auto clk = uint64_t(omnetpp::simTime().dbl() / period);
-  return (clk % 24 + in_port) % 24;
+  return ((clock_ / window) % 24 + in_port) % 24;
 }
 
 inline int32_t UpperNRC::get_root_id() {
@@ -572,9 +599,7 @@ inline bool UpperNRC::is_matched(int32_t request_po, int32_t switched_po) {
   return false;
 }
 
-inline bool UpperNRC::is_right_time() {
-  return uint64_t(omnetpp::simTime().dbl() / clk_cycle) % window == 0;
-}
+inline bool UpperNRC::is_right_time() { return clock_ % window == 0; }
 
 inline std::string UpperNRC::credit_string(credit *cdt) {
   std::string str("os=");
@@ -586,15 +611,29 @@ inline std::string UpperNRC::credit_string(credit *cdt) {
   return str;
 }
 
+inline std::string UpperNRC::exchange_string(exchange *exc) {
+  std::string str("os=");
+  str += std::to_string(exc->getOs());
+  str += ",port=";
+  str += std::to_string(exc->getPort());
+  str += ",vc=";
+  str += std::to_string(exc->getVc());
+  str += ",credit=";
+  str += std::to_string(exc->getCredit());
+  return str;
+}
+
 inline void UpperNRC::update_credit(int32_t type, int32_t os, int32_t port,
                                     int32_t vc, int32_t credit) {
-  exchange *exc = new exchange();
+  exchange *exc = new exchange("exchange");
   exc->setType(type);
   exc->setOs(os);
   exc->setPort(port);
   exc->setVc(vc);
   exc->setCredit(credit);
   send(exc, "port_24$o");
+  std::cerr << get_log(log_levels::debug,
+                       "sending exchange message " + exchange_string(exc));
 }
 
 void UpperNRC::finish() {}

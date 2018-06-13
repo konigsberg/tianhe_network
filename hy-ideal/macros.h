@@ -18,7 +18,7 @@ constexpr int32_t pipeline_stages = 2;
 
 constexpr int32_t nodebuf_capacity = 256;
 
-constexpr double clk_freq = 437500000.0;
+constexpr double clk_freq = 1000000000;
 constexpr double clk_cycle = 1 / clk_freq;
 
 constexpr double sim_start_time = 1;
@@ -26,9 +26,9 @@ constexpr double sim_start_time = 1;
 enum class log_levels : uint8_t { critical = 0, warn, info, debug };
 enum class traffic_patterns : uint8_t { uniform = 0 };
 
-constexpr uint64_t window = 1 + packet_length;
+constexpr int32_t window = 1 + packet_length;
 constexpr double period = window * clk_cycle;
-constexpr double margin = 0.17 * clk_cycle;
+constexpr double margin = 0.1 * clk_cycle;
 
 constexpr int32_t remote = 0;
 constexpr int32_t local = 1;

@@ -22,7 +22,7 @@ BaseNRC::~BaseNRC() {
       }
     }
   }
-  recordScalar("inbuf_flits", inbuf_flits);
+  recordScalar("inbuf_flits_left", inbuf_flits);
 
   // clear swtbuf
   auto swtbuf_flits = 0;
@@ -36,7 +36,7 @@ BaseNRC::~BaseNRC() {
               swtbuf_[i][j][k][b][v].pop_front();
               swtbuf_flits++;
             }
-  recordScalar("swtbuf_flits", swtbuf_flits);
+  recordScalar("swtbuf_flits_left", swtbuf_flits);
 
   // clearing free_msg_queue and forward_queue is unnecessary.
   // pipeline is removed. free_msg is integrated into flit.
@@ -52,7 +52,7 @@ BaseNRC::~BaseNRC() {
             colbuf_[i][j][k][v].pop_front();
             colbuf_flits++;
           }
-  recordScalar("colbuf_flits", colbuf_flits);
+  recordScalar("colbuf_flits_left", colbuf_flits);
 
   // clear credit_queue
   auto credits = 0;
@@ -63,7 +63,7 @@ BaseNRC::~BaseNRC() {
       ++credits;
     }
   }
-  recordScalar("credits", credits);
+  recordScalar("credits_unsent", credits);
 }
 
 void BaseNRC::initialize() {
