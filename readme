@@ -1,6 +1,43 @@
 TIANHE-2 interconnect network is composed of compute nodes and routers.
-We implement a hybrid inter
+We implement an electrical-phonic interconnect network.
 
-tips:
+Features:
+(1) Clock integer counter is used to implement the global forward table.
+(2) Every upper-side router and lower-side router has local cache of shared
+credit memory. Copy-on-write is used to update local credit cache. When a local
+credit cache is modified, it send an update exchange message to shared memory,
+and share memory broadcast the new credit to all local cache.
 
-1.
+Limitations:
+(1) To simplify forward table viewed by side routers and optical switch, we set
+the byte length of flit to zero.
+(2) Credit message is not embedded into flit.
+
+Bug fixed:
+(1) Sending credit is skipped when input buffer is empty.
+(2) When setting the port in credit message, the calculated output port is used
+instead of the actually switched port.
+(3) The credit array index is between P/2 and P for upper-side routers.
+(4) The clock calculation based on division of double values has precision
+error, making some flit blocked even if it's right time to forward.
+
+Bug unfixed:
+(1) Lower-side routers have leak memory of credit object, although the credit
+messages are deleted in router's destructor.
+(2) Low-throughput, possibly high-latency of long trip flits.
+(3) If credit message is not embedded into flit, it is possible that the optical
+switch could not forward a credit message because all of its ports are busy. So
+the credit message maybe dropped, causing serious traffic issue.
+(4) The window of forwarding packet can be minimized to packet size.
+(5) Downward forwarding can possibly be optimized.
+(6) Frequency should be reset to 437.5MHz.
+
+Simulation results:
+injection rate = 1, warm up time = 150ns, stop time = 400ns, uniform traffic:
+total_flit_gen = 4700160
+total_flit_sent = 4626244
+total_flit_recv = 466137
+throughput = 9.917470894607844 %
+average latency = 640.0395546667785 ns
+
+injection rate = 0.2, warm up time = 150ns, stop time = 400ns, uniform traffic:
