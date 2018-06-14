@@ -130,6 +130,7 @@ void UpperNRC::timer_cb() {
   scheduleAt(omnetpp::simTime() + clk_cycle, self_timer_);
   route_compute();
   row_move();
+  send_credit();
   first_virtual_channel_allocation();
   switch_allocation();
   switch_traversal();
@@ -220,22 +221,26 @@ void UpperNRC::route_compute() {
       }                                                                        \
       credit_queue_[pi].push_back(cdt);                                        \
     }                                                                          \
-                                                                               \
-    if (channel_is_available(pi) && !credit_queue_[pi].empty()) {              \
-      auto cdt = credit_queue_[pi].front();                                    \
-      char pi_cstr[20];                                                        \
-      sprintf(pi_cstr, "port_%d$o", pi);                                       \
-      send(cdt, pi_cstr);                                                      \
-      credit_queue_[pi].pop_front();                                           \
-      std::cerr << get_log(log_levels::info,                                   \
-                           "sending credit message " + credit_string(cdt));    \
-    }                                                                          \
   }
 
 void UpperNRC::row_move() {
   for (auto pi = 0; pi < P; pi++) {
     for (auto vi = 0; vi < V; vi++) {
       ROW_MOVE_FOR_BUF(pi, vi);
+    }
+  }
+}
+
+void UpperNRC::send_credit() {
+  for (auto pi = 0; pi < P; pi++) {
+    if (channel_is_available(pi) && !credit_queue_[pi].empty()) {
+      auto cdt = credit_queue_[pi].front();
+      char pi_cstr[20];
+      sprintf(pi_cstr, "port_%d$o", pi);
+      send(cdt, pi_cstr);
+      credit_queue_[pi].pop_front();
+      std::cerr << get_log(log_levels::info,
+                           "sending credit message " + credit_string(cdt));
     }
   }
 }
@@ -464,8 +469,9 @@ void UpperNRC::lower_port_select_packet() {
         if (*credit < packet_length) {
           std::cerr << get_log(log_levels::debug,
                                "cannot forward packet because downstream inbuf "
-                               "is full at port " +
-                                   std::to_string(po));
+                               "credit at port " +
+                                   std::to_string(po) + " is " +
+                                   std::to_string(*credit));
           continue;
         }
 

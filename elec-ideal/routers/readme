@@ -12,3 +12,5 @@ input buffer is deque with variant length.
 
 The bug is not introduced during the re-writing code. The bug is existed all
 the time since last December.
+
+The bug has been fixed now.

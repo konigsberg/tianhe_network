@@ -23,6 +23,7 @@ protected:
   void timer_cb();
   void route_compute();
   void row_move();
+  void send_credit();
   void first_virtual_channel_allocation();
   void switch_allocation();
   void switch_traversal();
