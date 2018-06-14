@@ -1,28 +1,6 @@
-天河2号互连网络由计算结点和交换机组成。
+TIANHE-2 interconnect network is composed of compute nodes and routers.
+We implement a hybrid inter
 
-switches目录包含交换机的OMNeT++模型。
+tips:
 
-BaseNRC实现了tail-based high-radix switch的流水线。流水线的功能在纯电互连天河网络中，
-已经得到验证。BaseNRC是最底层和最高层的NRC模型。
-
-UpperNRC的向下端口连接到光开关；LowerNRC的向上端口连接到光开关。
-
-UpperNRC, LowerNRC在网络中分别位于光开关上下两侧。PlainNRC在最底层和最高层。
-
-光开关是基于MRR的开关结构。
-
-目前光电混合网络的路由已经通了。光开关的转发、buffer溢出、路由正确性方面都没有问题。
-
-在实现了光开关和新的流量控制协议后，发现一段时间以后，网络几乎无法注入流量。我正在检查是不是
-绝大多数router buffer都是空的。
-
-检查结果出来了，5920／6048个NRC的input buffer为空。5314／6048个NRC的column buffer有
-超过50个flits。显然下游input buffer的释放情况没有正确、及时地反馈到上游。
-
-现在先检查一下每个路由器收到credit消息的情况。而且为什么destructor没有delete掉credit消息。
-这很奇怪。
-
-我觉得仍然需要在旧的流量控制协议下面，写一个光电混合网络的模型，这样来评估是不是新的协议存在
-问题。因为旧的流量控制协议是一个比较高性能的做法。我们可以先尝试出光电网络在理想情况下的性能
-极限，再采用现实模型、不断优化现实模型，逼近理想性能极限。
-但采用flit携带credit是正确的做法。只是我们目前的方案并不完美。
+1.

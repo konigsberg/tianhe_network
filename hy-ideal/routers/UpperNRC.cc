@@ -207,20 +207,18 @@ void UpperNRC::route_compute() {
                                                                                \
     source.pop_front();                                                        \
                                                                                \
-    {                                                                          \
-      auto cdt = new credit("credit_upper");                                   \
+    auto cdt = new credit("credit_upper");                                     \
                                                                                \
-      if (pi >= P / 2) {                                                       \
-        cdt->setOs(-1);                                                        \
-        cdt->setPort(get_next_port(pi));                                       \
-        cdt->setVc(vi);                                                        \
-      } else {                                                                 \
-        cdt->setOs(get_root_id());                                             \
-        cdt->setPort(get_nrm_id());                                            \
-        cdt->setVc(vi);                                                        \
-      }                                                                        \
-      credit_queue_[pi].push_back(cdt);                                        \
+    if (pi >= P / 2) {                                                         \
+      cdt->setOs(-1);                                                          \
+      cdt->setPort(get_next_port(pi));                                         \
+      cdt->setVc(vi);                                                          \
+    } else {                                                                   \
+      cdt->setOs(get_root_id());                                               \
+      cdt->setPort(get_nrm_id());                                              \
+      cdt->setVc(vi);                                                          \
     }                                                                          \
+    credit_queue_[pi].push_back(cdt);                                          \
   }
 
 void UpperNRC::row_move() {
@@ -272,15 +270,11 @@ void UpperNRC::send_credit() {
   }
 
 void UpperNRC::first_virtual_channel_allocation() {
-  for (auto ti = 0; ti < H; ti++) {
-    for (auto tj = 0; tj < W; tj++) {
-      for (auto po = 0; po < H; po++) {
-        for (auto vo = 0; vo < V; vo++) {
+  for (auto ti = 0; ti < H; ti++)
+    for (auto tj = 0; tj < W; tj++)
+      for (auto po = 0; po < H; po++)
+        for (auto vo = 0; vo < V; vo++)
           FIRST_VCA_FOR_FLIT(ti, tj, po, vo);
-        }
-      }
-    }
-  }
 }
 
 #define SWITCH_ALLOC_FOR_PORT(ti, tj, po)                                      \
@@ -462,6 +456,7 @@ void UpperNRC::lower_port_select_packet() {
       auto switched_po = get_switched_port(next_pi);
 
       if (is_matched(next_po, switched_po) && is_right_time()) {
+        next_po = switched_po;
         auto os_id = getIndex() * P / 2 + po;
         auto vc = f->getVcid();
 

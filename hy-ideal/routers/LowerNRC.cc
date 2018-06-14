@@ -468,6 +468,7 @@ void LowerNRC::upper_port_select_packet() {
       auto switched_po = get_switched_port(next_pi);
 
       if (is_matched(next_po, switched_po) && is_right_time()) {
+        next_po = switched_po;
         auto os_id = getIndex() * P / 2 + (po - P / 2);
         auto vc = f->getVcid();
 
