@@ -20,6 +20,8 @@ instead of the actually switched port.
 (3) The credit array index is between P/2 and P for upper-side routers.
 (4) The clock calculation based on division of double values has precision
 error, making some flit blocked even if it's right time to forward.
+(5) The router latency is in second unit while the link latency is in nano
+second unit.
 
 Bug unfixed:
 (1) Lower-side routers have leak memory of credit object, although the credit
@@ -41,3 +43,66 @@ throughput = 9.917470894607844 %
 average latency = 640.0395546667785 ns
 
 injection rate = 0.2, warm up time = 150ns, stop time = 400ns, uniform traffic:
+total_flit_gen = 1013760
+total_flit_sent = 940032
+total_flit_recv = 503317
+throughput = 49.64853614267677 %
+average latency = 687.1205561259072 ns
+
+injection rate = 0.8, warm up time = 400ns, stop time = 500ns, uniform traffic:
+total_flit_gen = 1566720
+total_flit_sent = 1492973
+total_flit_recv = 3142
+throughput = 0.20054636437908496 %
+average latency = 629.5294234226799 ns
+
+The theoretical latency under uniform injection is
+12/18432*100+20/18432*300+32*11/18432*500+11*32*12/18432*800+36*32*12/18432*1000
+= 943ns
+
+injection rate = 1, warm up time = 500ns, stop time = 1000ns, uniform traffic:
+total_flit_gen = 4055040
+total_flit_sent = 4035307
+total_flit_recv = 234670
+throughput = 99.51337101483585 %
+average latency = 1387.679252804978 ns
+
+under injection rate 0.1:
+total_flit_gen = 368640
+total_flit_sent = 368640
+total_flit_recv = 326970
+throughput = 100.0 %
+average latency = 1339.789096332311 ns
+average hopcount = 8.343623114892498
+
+under injection rate 0.3:
+total_flit_gen = 1198080
+total_flit_sent = 1234944
+total_flit_recv = 371116
+throughput = 103.07692307692307 %
+average latency = 1339.6317548447546 ns
+average hopcount = 8.187755678632362
+
+under injection rate 0.5:
+total_flit_gen = 2027520
+total_flit_sent = 2027520
+total_flit_recv = 292636
+throughput = 100.0 %
+average latency = 1352.5427959258725 ns
+average hopcount = 8.098283643024251
+
+under injection rate 0.7:
+total_flit_gen = 2856960
+total_flit_sent = 2820096
+total_flit_recv = 254887
+throughput = 98.70967741935483 %
+average latency = 1363.050423725556 ns
+average hopcount = 8.053255157296771
+
+under injection rate 0.9:
+total_flit_gen = 3594240
+total_flit_sent = 3631097
+total_flit_recv = 240047
+throughput = 101.0254462695869 %
+average latency = 1376.7932981786926 ns
+average hopcount = 8.03796610751557

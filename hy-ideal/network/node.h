@@ -47,7 +47,9 @@ private:
   uint64_t total_packet_dropped_{0};
   uint64_t total_flit_received_{0};
   uint64_t total_packet_received_{0};
+  uint64_t total_hop_count_{0};
   double total_latency_{0};
   double avg_latency_{0};
+  double avg_hop_count_{0};
   int32_t credit_[V];
 };

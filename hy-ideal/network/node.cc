@@ -6,7 +6,7 @@
 
 #include "node.h"
 
-int32_t delays[10] = {0, 100, 0, 300, 0, 500, 0, 800, 0, 1000};
+double delays[10] = {0, 111.4, 0, 334.2, 0, 557, 0, 879.8, 0, 1102.6};
 
 Node::Node() {}
 
@@ -110,9 +110,15 @@ void Node::flit_cb(omnetpp::cMessage *msg) {
 
   if (omnetpp::simTime() >= record_start_time) {
     ++total_flit_received_;
-    auto flit_latency = omnetpp::simTime().dbl() - f->getSend_time() +
+    auto flit_latency = (omnetpp::simTime().dbl() - f->getSend_time()) * 1e9 +
                         delays[f->getHop_count()];
+
+    std::cerr << get_log(log_levels::debug,
+                         "hop count is " + std::to_string(f->getHop_count()) +
+                             ", flit latency is " +
+                             std::to_string(flit_latency));
     total_latency_ += flit_latency;
+    total_hop_count_ += f->getHop_count();
     if (f->getIs_tail())
       ++total_packet_received_;
   }
@@ -189,8 +195,10 @@ omnetpp::simtime_t Node::get_channel_available_time() {
 void Node::finish() {
   uint64_t total_cycles =
       (omnetpp::simTime().dbl() - record_start_time) / clk_cycle;
-  if (total_flit_received_ != 0)
+  if (total_flit_received_ != 0) {
     avg_latency_ = total_latency_ * 1.0 / total_flit_received_;
+    avg_hop_count_ = total_hop_count_ * 1.0 / total_flit_received_;
+  }
   recordScalar("total_cycles", total_cycles);
   recordScalar("total_flit_gen", total_flit_gen_);
   recordScalar("total_flit_sent", total_flit_sent_);
@@ -199,6 +207,7 @@ void Node::finish() {
   recordScalar("total_flit_received", total_flit_received_);
   recordScalar("total_packet_received", total_packet_received_);
   recordScalar("avg_latency", avg_latency_);
+  recordScalar("avg_hop_count", avg_hop_count_);
 }
 
 inline std::string Node::get_id() {

@@ -18,7 +18,7 @@ constexpr int32_t pipeline_stages = 2;
 
 constexpr int32_t nodebuf_capacity = 256;
 
-constexpr double clk_freq = 1000000000;
+constexpr double clk_freq = 437500000.0;
 constexpr double clk_cycle = 1 / clk_freq;
 
 constexpr double sim_start_time = 1;

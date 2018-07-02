@@ -528,6 +528,7 @@ void LowerNRC::upper_port_forward_packet(int32_t po, buf &buffer) {
     std::cerr << get_log(log_levels::info, std::string("forwarded flit: ") +
                                                f->getName() + " at port " +
                                                std::to_string(po));
+    f->setHop_count(f->getHop_count() + 1);
     sendDelayed(f, count * clk_cycle, po_cstr);
     // sendDelayed(f, count * (clk_cycle + margin), po_cstr);
     buffer.pop_front();
