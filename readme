@@ -106,3 +106,10 @@ total_flit_recv = 240047
 throughput = 101.0254462695869 %
 average latency = 1376.7932981786926 ns
 average hopcount = 8.03796610751557
+
+no flow control
+total_flit_gen = 8110080
+total_flit_sent = 8073216
+total_flit_recv = 1946258
+throughput = 99.54545454545455 %
+average latency = 1589.6437687827101 ns
