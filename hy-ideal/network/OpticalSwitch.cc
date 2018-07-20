@@ -102,7 +102,10 @@ protected:
   }
 
   int32_t get_switched_port(int32_t in_port) {
-    return ((clock_ / window) % 24 + in_port) % 24;
+    if (in_port < 12)
+      return ((clock_ / window) % 24 + in_port) % 24;
+    else
+      return ((clock_ / window) % 12 + in_port) % 12;
   }
 
   std::string get_id() {

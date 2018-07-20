@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 
-constexpr int32_t V = 4;
+constexpr int32_t V = 6;
 constexpr int32_t H = 4;
 constexpr int32_t W = 6;
 constexpr int32_t P = 24;

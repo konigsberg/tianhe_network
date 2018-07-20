@@ -205,3 +205,67 @@ total_flit_recv = 1948628
 throughput = 99.74683544303798 %
 average latency = 1569.1040303361046 ns
 average hopcount = 8.009461186401436
+
+hack flow control
+under injection rate 0.2:
+
+total_flit_gen = 829440
+total_flit_sent = 829440
+total_flit_recv = 776860
+throughput = 100.0 %
+average latency = 1181.4200832866286 ns
+average hopcount = 8.38840394384246
+
+under injection rate 0.4:
+
+total_flit_gen = 1658880
+total_flit_sent = 1566720
+total_flit_recv = 1317379
+throughput = 94.44444444444444 %
+average latency = 1229.561365461096 ns
+average hopcount = 8.329425034483497
+
+under injection rate 0.6:
+
+total_flit_gen = 2396160
+total_flit_sent = 2433024
+total_flit_recv = 1498394
+throughput = 101.53846153846153 %
+average latency = 1268.6684525890678 ns
+average hopcount = 8.2930934036226
+
+under injection rate 0.7:
+
+total_flit_gen = 2856960
+total_flit_sent = 2820096
+total_flit_recv = 1525611
+throughput = 98.70967741935483 %
+average latency = 1281.41146628717 ns
+average hopcount = 8.290250784053946
+
+under injection rate 0.8:
+
+total_flit_gen = 3225600
+total_flit_sent = 3225600
+total_flit_recv = 1537657
+throughput = 100.0 %
+average latency = 1293.4294204033242 ns
+average hopcount = 8.292702280913904
+
+under injection rate 0.9:
+
+total_flit_gen = 3594240
+total_flit_sent = 3631104
+total_flit_recv = 1543433
+throughput = 101.02564102564102 %
+average latency = 1307.1876167505443 ns
+average hopcount = 8.293634843333159
+
+under injection rate 1.0:
+
+total_flit_gen = 4055040
+total_flit_sent = 4036577
+total_flit_recv = 1548272
+throughput = 99.5446900647096 %
+average latency = 1323.87576751024 ns
+average hopcount = 8.293480465198593
